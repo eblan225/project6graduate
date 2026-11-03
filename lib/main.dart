@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'data/demo_student_data_source.dart';
-import 'models/academic_models.dart';
 import 'screens/courses_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/plan_screen.dart';
@@ -63,15 +62,33 @@ class _TigerTrackAppState extends State<TigerTrackApp> {
         ),
       ),
       home: Scaffold(
-        body: SafeArea(child: IndexedStack(index: selectedIndex, children: pages)),
+        body: SafeArea(
+          child: IndexedStack(index: selectedIndex, children: pages),
+        ),
         bottomNavigationBar: NavigationBar(
           selectedIndex: selectedIndex,
           onDestinationSelected: _select,
           destinations: const [
-            NavigationDestination(icon: Icon(Icons.space_dashboard_outlined), selectedIcon: Icon(Icons.space_dashboard), label: 'Home'),
-            NavigationDestination(icon: Icon(Icons.menu_book_outlined), selectedIcon: Icon(Icons.menu_book), label: 'Courses'),
-            NavigationDestination(icon: Icon(Icons.calendar_month_outlined), selectedIcon: Icon(Icons.calendar_month), label: 'Plan'),
-            NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Profile'),
+            NavigationDestination(
+              icon: Icon(Icons.space_dashboard_outlined),
+              selectedIcon: Icon(Icons.space_dashboard),
+              label: 'Home',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.menu_book_outlined),
+              selectedIcon: Icon(Icons.menu_book),
+              label: 'Courses',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.calendar_month_outlined),
+              selectedIcon: Icon(Icons.calendar_month),
+              label: 'Plan',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.person_outline),
+              selectedIcon: Icon(Icons.person),
+              label: 'Profile',
+            ),
           ],
         ),
       ),
@@ -83,7 +100,8 @@ class _TigerTrackAppState extends State<TigerTrackApp> {
   void _refresh() => setState(() {});
 }
 
-String creditLabel(int credits) => '$credits ${credits == 1 ? 'credit' : 'credits'}';
+String creditLabel(int credits) =>
+    '$credits ${credits == 1 ? 'credit' : 'credits'}';
 
 class SectionTitle extends StatelessWidget {
   const SectionTitle(this.title, {super.key, this.action, this.onAction});
@@ -93,11 +111,14 @@ class SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(title, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
-          if (action != null)
-            TextButton(onPressed: onAction, child: Text(action!)),
-        ],
-      );
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      Text(
+        title,
+        style: Theme.of(context).textTheme.titleLarge
+            ?.copyWith(fontWeight: FontWeight.w700),
+      ),
+      if (action != null) TextButton(onPressed: onAction, child: Text(action!)),
+    ],
+  );
 }

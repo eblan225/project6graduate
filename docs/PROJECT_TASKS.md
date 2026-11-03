@@ -76,9 +76,10 @@ This is the end-to-end checklist for the LSU degree-planning app. The app remain
 
 - [ ] Add unit tests for credit totals, requirement matching, remaining-credit calculations, and term planning.
 - [ ] Add tests for import parsing, validation, duplicates, and malformed or partial records.
-- [ ] Add Flutter widget tests for onboarding, course review, editing, plan changes, and failure states.
+- [ ] Expand Flutter widget tests for onboarding, course review/editing, plan changes, and failure states (the initial app navigation smoke test is in place).
 - [ ] Add integration tests for the authorized import method and app data flow using synthetic accounts/data.
-- [ ] Run `flutter analyze`, `flutter test`, and platform builds in CI.
+- [x] Add GitHub Actions CI for formatting, `flutter analyze`, `flutter test`, and Android debug APK builds.
+- [ ] Confirm the CI workflow passes on GitHub and keep it green.
 - [ ] Test offline behavior, upgrade/migration behavior, and data recovery.
 - [ ] Set up crash/error monitoring without collecting student course data in telemetry.
 - [ ] Define support, incident response, and LSU curriculum-data update procedures.
@@ -94,4 +95,4 @@ This is the end-to-end checklist for the LSU degree-planning app. The app remain
 
 ## Current verification
 
-No Flutter analysis, tests, or platform builds have been run for the new app shell yet. Workday access, LSU requirements, and calculation correctness are not implemented or validated.
+Local checks completed: Dart formatting check passed; `flutter analyze` reported no issues; `flutter test` passed the app navigation smoke test; `flutter build apk --debug` succeeded. The GitHub Actions workflow itself has not yet run on GitHub. Workday access, LSU requirements, and calculation correctness are not implemented or validated.

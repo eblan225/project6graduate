@@ -47,7 +47,7 @@ flutter test
 
 ## Verification status
 
-No Flutter analysis, tests, or platform builds were run for this update. Workday access, LSU degree rules, sample calculation correctness, persistence, and data security have not been validated. Check `docs/PROJECT_TASKS.md` for remaining work.
+Local verification passed: Dart formatting check; `flutter analyze` (no issues); `flutter test` (1 widget test passed); and `flutter build apk --debug` (APK created at `build/app/outputs/flutter-apk/app-debug.apk`). GitHub Actions has been added but has not yet run on GitHub. Workday access, LSU degree rules, sample calculation correctness, persistence, and data security remain unvalidated. Check `docs/PROJECT_TASKS.md` for remaining work.
 
 ## Immediate next steps
 

@@ -24,4 +24,4 @@ The app includes overview, courses, graduation plan, and profile tabs. Course en
 
 Flutter phone-first UI and a replaceable `StudentDataSource` boundary are in place. The demo implementation uses synthetic records, not LSU curriculum data. Planning currently shows a simple evenly divided credit estimate; it does not match requirements, prerequisites, course offerings, or actual LSU rules.
 
-No Flutter analysis, widget tests, or builds have been run for this foundation yet.
+Local formatting, analysis, the widget test, and Android debug APK build have passed. GitHub Actions is configured in `.github/workflows/flutter-ci.yml`; its first hosted run is pending.

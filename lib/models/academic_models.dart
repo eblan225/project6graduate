@@ -43,7 +43,9 @@ class StudentProfile {
 
   int get earnedOrInProgressCredits => completedCredits + inProgressCredits;
 
-  int get remainingCredits => (requiredCredits - earnedOrInProgressCredits).clamp(0, requiredCredits).toInt();
+  int get remainingCredits => (requiredCredits - earnedOrInProgressCredits)
+      .clamp(0, requiredCredits)
+      .toInt();
 
   double get completionFraction => requiredCredits == 0
       ? 0
