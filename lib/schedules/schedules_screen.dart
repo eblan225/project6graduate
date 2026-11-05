@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../ui/app_theme.dart';
 import 'schedule.dart';
+import '../models/degree_timeline.dart';
 import 'create_schedule_screen.dart';
 import 'schedule_detail_screen.dart';
 
 class SchedulesScreen extends StatefulWidget {
-  const SchedulesScreen({super.key});
+  const SchedulesScreen({super.key, this.timeline});
+  final DegreeTimeline? timeline;
   @override
   State<SchedulesScreen> createState() => _SchedulesScreenState();
 }
@@ -26,7 +28,9 @@ class _SchedulesScreenState extends State<SchedulesScreen> {
   Future<void> create() async {
     final result = await Navigator.push<SemesterSchedule>(
       context,
-      MaterialPageRoute(builder: (_) => const CreateScheduleScreen()),
+      MaterialPageRoute(
+        builder: (_) => CreateScheduleScreen(timeline: widget.timeline),
+      ),
     );
     if (!mounted || result == null) return;
     setState(() => schedules.add(result));
@@ -63,7 +67,7 @@ class _SchedulesScreenState extends State<SchedulesScreen> {
                     ),
                     SizedBox(height: 16),
                     Text(
-                      'Schedules are saved only during this session. Sign-in, persistent storage, and file import are not connected yet.',
+                      'Schedules are saved only during this session. Persistent storage and file import are not connected yet.',
                     ),
                     SizedBox(height: 16),
                     Text(

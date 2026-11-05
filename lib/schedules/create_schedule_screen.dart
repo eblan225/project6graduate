@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../ui/app_theme.dart';
 import 'schedule.dart';
+import '../models/degree_timeline.dart';
 
 class CreateScheduleScreen extends StatefulWidget {
-  const CreateScheduleScreen({super.key});
+  const CreateScheduleScreen({super.key, this.timeline});
+  final DegreeTimeline? timeline;
   @override
   State<CreateScheduleScreen> createState() => _CreateScheduleScreenState();
 }
@@ -13,6 +15,13 @@ class _CreateScheduleScreenState extends State<CreateScheduleScreen> {
   final form = GlobalKey<FormState>();
   final name = TextEditingController();
   final classes = TextEditingController();
+  @override
+  void initState() {
+    super.initState();
+    final plan = widget.timeline;
+    if (plan != null) name.text = plan.semesterLabel(plan.currentSemester);
+  }
+
   @override
   void dispose() {
     name.dispose();
@@ -36,6 +45,30 @@ class _CreateScheduleScreenState extends State<CreateScheduleScreen> {
             'Start with a semester and a few classes. You can add details later.',
           ),
           const SizedBox(height: 28),
+          if (widget.timeline != null) ...[
+            DropdownButtonFormField<String>(
+              initialValue: widget.timeline!.semesterLabel(
+                widget.timeline!.currentSemester,
+              ),
+              decoration: const InputDecoration(labelText: 'Semester template'),
+              isExpanded: true,
+              items: widget.timeline!.semesterNames
+                  .map(
+                    (label) =>
+                        DropdownMenuItem(value: label, child: Text(label)),
+                  )
+                  .toList(),
+              onChanged: (value) {
+                if (value != null) name.text = value;
+              },
+            ),
+            const SizedBox(height: 16),
+          ] else ...[
+            const Text(
+              'Set your first semester in My goals to get semester templates.',
+            ),
+            const SizedBox(height: 16),
+          ],
           TextFormField(
             controller: name,
             decoration: const InputDecoration(

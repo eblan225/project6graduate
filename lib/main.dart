@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'ui/app_theme.dart';
+import 'models/degree_timeline.dart';
+import 'auth/sign_in_screen.dart';
 import 'schedules/welcome_screen.dart';
 import 'schedules/schedules_screen.dart';
 
@@ -13,20 +15,47 @@ class TigerTrackApp extends StatelessWidget {
     title: 'Graduate!',
     debugShowCheckedModeBanner: false,
     theme: AppStyle.theme,
-    home: const _StartScreen(),
+    home: const AuthGate(child: _StartScreen()),
   );
 }
 
-class _StartScreen extends StatelessWidget {
+class _StartScreen extends StatefulWidget {
   const _StartScreen();
   @override
-  Widget build(BuildContext context) => WelcomeScreen(
-    onContinue: () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute<void>(builder: (_) => const SchedulesScreen()),
-      );
-    },
+  State<_StartScreen> createState() => _StartScreenState();
+}
+
+class _StartScreenState extends State<_StartScreen> {
+  int selected = 0;
+  DegreeTimeline? timeline;
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    body: IndexedStack(
+      index: selected,
+      children: [
+        WelcomeScreen(
+          onContinue: (value) => setState(() {
+            timeline = value;
+            selected = 1;
+          }),
+        ),
+        SchedulesScreen(timeline: timeline),
+      ],
+    ),
+    bottomNavigationBar: NavigationBar(
+      selectedIndex: selected,
+      onDestinationSelected: (value) => setState(() => selected = value),
+      destinations: const [
+        NavigationDestination(
+          icon: Icon(Icons.school_outlined),
+          label: 'My goals',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.calendar_month_outlined),
+          label: 'Semesters',
+        ),
+      ],
+    ),
   );
 }
 

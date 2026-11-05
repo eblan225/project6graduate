@@ -38,3 +38,11 @@ To change the layout later:
 - `lib/main.dart`: app entry and navigation into the schedule flow.
 
 Manual entry accepts one class per line, with an optional `|` followed by meeting-time notes. Tap a class to edit it, or use Add class. Calendar mode currently displays a clearly marked preview and the entered notes; it does not interpret times or place classes on a weekly grid.
+
+The starting screen collects a major and a 2-, 4-, or 5-year degree program length. A final-semester summary below the selection assumes two semesters per academic year; calendar dates depend on the student’s start date. The My goals and Semesters tabs separate these preferences from semester schedule editing and preserve both while switching tabs during a session. These preferences do not yet drive graduation calculations and reset when the app restarts.
+
+## Google sign-in
+
+The app now opens with Google sign-in or a guest preview. Google Cloud OAuth registration is required to activate sign-in; see [platform setup instructions](docs/GOOGLE_SIGN_IN.md). Google identity does not yet enable cloud saving. Signing out clears session-only goals and schedules.
+
+Degree timelines now collect the first Fall/Spring term and year plus the student's current semester number. The final semester and count after the current semester use two semesters per academic year, excluding summers. Continue to schedules saves these preferences for the session. New schedule forms offer every semester from that starting date as a name template and default to the current semester; names remain editable. Changing the timeline updates templates without renaming existing schedules. Remaining required courses are not inferred from elapsed semesters.
