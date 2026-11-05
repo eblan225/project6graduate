@@ -25,3 +25,16 @@ The app includes overview, courses, graduation plan, and profile tabs. Course en
 Flutter phone-first UI and a replaceable `StudentDataSource` boundary are in place. The demo implementation uses synthetic records, not LSU curriculum data. Planning currently shows a simple evenly divided credit estimate; it does not match requirements, prerequisites, course offerings, or actual LSU rules.
 
 Local formatting, analysis, the widget test, and Android debug APK build have passed. GitHub Actions is configured in `.github/workflows/flutter-ci.yml`; its first hosted run is pending.
+
+## Mockup-based starting screens
+
+The current entry flow is Graduate!: welcome → empty schedules → manual semester entry → editable class list / calendar preview. The previous academic demo screens and data-source boundary remain available in the source for future integration. No account credentials are collected. File upload, authentication, and timed calendar placement are placeholders; schedules reset on app restart.
+
+To change the layout later:
+
+- `lib/ui/app_theme.dart`: shared colors, control styles, page padding, maximum content width, and reusable page/empty-state widgets.
+- `lib/schedules/`: separate welcome, schedule list, creation, and semester detail screens.
+- `lib/schedules/schedule.dart`: session-only schedule records, separate from degree planning models.
+- `lib/main.dart`: app entry and navigation into the schedule flow.
+
+Manual entry accepts one class per line, with an optional `|` followed by meeting-time notes. Tap a class to edit it, or use Add class. Calendar mode currently displays a clearly marked preview and the entered notes; it does not interpret times or place classes on a weekly grid.
