@@ -75,14 +75,14 @@ class _CreateScheduleScreenState extends State<CreateScheduleScreen> {
             decoration: const InputDecoration(
               labelText: 'Your classes',
               alignLabelWithHint: true,
-              hintText: 'One class per line\nENGL 1001 | Mon 9:00 AM\nMATH 1021\n\nTimes are optional.',
+              hintText: 'One class per line\nENGL 1001 / Mon 9:00 AM\nMATH 1021\n\nTimes are optional.',
             ),
             validator: (v) =>
                 v == null || v.trim().isEmpty ? 'Add at least one class' : null,
           ),
           const SizedBox(height: 12),
           const Text(
-            'Separate a class name and time with |. This preview keeps times as notes.',
+            'Separate a class name and time with /. This preview keeps times as notes.',
             style: TextStyle(color: Color(0xFF767085)),
           ),
           const SizedBox(height: 28),
@@ -93,17 +93,17 @@ class _CreateScheduleScreenState extends State<CreateScheduleScreen> {
                   .split('\n')
                   .where((v) => v.trim().isNotEmpty)
                   .map((line) {
-                    final parts = line.split('|');
+                    final parts = line.split('/');
                     return ScheduleClass(
                       name: parts.first.trim(),
-                      time: parts.skip(1).join('|').trim(),
+                      time: parts.skip(1).join('/').trim(),
                     );
                   })
                   .toList();
               if (rows.any((row) => row.name.isEmpty)) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Each line needs a class name before |.'),
+                    content: Text('Each line needs a class name before /.'),
                   ),
                 );
                 return;
