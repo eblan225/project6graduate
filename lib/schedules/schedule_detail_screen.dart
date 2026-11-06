@@ -4,8 +4,13 @@ import '../ui/app_theme.dart';
 import 'schedule.dart';
 
 class ScheduleDetailScreen extends StatefulWidget {
-  const ScheduleDetailScreen({super.key, required this.schedule});
+  const ScheduleDetailScreen({
+    super.key,
+    required this.schedule,
+    required this.onChanged,
+  });
   final SemesterSchedule schedule;
+  final Future<void> Function() onChanged;
   @override
   State<ScheduleDetailScreen> createState() => _ScheduleDetailScreenState();
 }
@@ -76,6 +81,31 @@ class _ScheduleDetailScreenState extends State<ScheduleDetailScreen> {
         widget.schedule.classes[index] = result;
       }
     });
+    await widget.onChanged();
+  }
+
+  Future<void> removeClass(int index) async {
+    final course = widget.schedule.classes[index];
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Remove class?'),
+        content: Text('Remove ${course.name} from this semester?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || confirmed != true) return;
+    setState(() => widget.schedule.classes.removeAt(index));
+    await widget.onChanged();
   }
 
   @override
@@ -135,7 +165,11 @@ class _ScheduleDetailScreenState extends State<ScheduleDetailScreen> {
                     ? 'Time not added'
                     : widget.schedule.classes[i].time,
               ),
-              trailing: const Icon(Icons.edit_outlined, size: 20),
+              trailing: IconButton(
+                tooltip: 'Remove class',
+                icon: const Icon(Icons.delete_outline),
+                onPressed: () => removeClass(i),
+              ),
               onTap: () => editClass(i),
             ),
           ),
