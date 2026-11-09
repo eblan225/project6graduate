@@ -3,10 +3,13 @@ import 'package:flutter/material.dart';
 import '../ui/app_theme.dart';
 import 'schedule.dart';
 import '../models/degree_timeline.dart';
+import '../planner/course_plan.dart';
+import '../importing/import_courses_screen.dart';
 
 class CreateScheduleScreen extends StatefulWidget {
-  const CreateScheduleScreen({super.key, this.timeline});
+  const CreateScheduleScreen({super.key, this.timeline, this.coursePlan});
   final DegreeTimeline? timeline;
+  final CoursePlan? coursePlan;
   @override
   State<CreateScheduleScreen> createState() => _CreateScheduleScreenState();
 }
@@ -79,23 +82,62 @@ class _CreateScheduleScreenState extends State<CreateScheduleScreen> {
                 v == null || v.trim().isEmpty ? 'Enter a semester name' : null,
           ),
           const SizedBox(height: 20),
-          const Card(
+          Card(
             child: Padding(
-              padding: EdgeInsets.all(24),
+              padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.upload_file_outlined,
                     color: AppStyle.purple,
                     size: 32,
                   ),
-                  SizedBox(height: 12),
-                  Text('Upload a schedule'),
-                  SizedBox(height: 8),
-                  Text(
-                    'File import is coming later. Use manual entry below.',
+                  const SizedBox(height: 12),
+                  const Text('Import courses from XLSX or PDF'),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Review your file, then arrange courses in Course map. Grades and personal progress are excluded.',
                     textAlign: TextAlign.center,
                   ),
+                  if (widget.coursePlan != null) ...[
+                    const SizedBox(height: 12),
+                    OutlinedButton(
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute<bool>(
+                          builder: (_) =>
+                              ImportCoursesScreen(plan: widget.coursePlan!),
+                        ),
+                      ),
+                      child: const Text('Import XLSX / PDF'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        final labels = widget.timeline?.semesterNames ?? [];
+                        final index = labels.indexOf(name.text.trim());
+                        if (index < 0) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Choose a semester template first.',
+                              ),
+                            ),
+                          );
+                          return;
+                        }
+                        final plan = widget.coursePlan!;
+                        final rows = plan.courses.where(
+                          (c) =>
+                              plan.placements[c.id] == index + 1 &&
+                              plan.status(c.id) != PlanStatus.completed,
+                        );
+                        classes.text = rows
+                            .map((c) => '${plan.label(c)} — ${c.title}')
+                            .join('\n');
+                      },
+                      child: const Text('Use this semester’s map courses'),
+                    ),
+                  ],
                 ],
               ),
             ),

@@ -46,3 +46,10 @@ The starting screen collects a major and a 2-, 4-, or 5-year degree program leng
 The app now opens with Google sign-in or a guest preview. Google Cloud OAuth registration is required to activate sign-in; see [platform setup instructions](docs/GOOGLE_SIGN_IN.md). Google identity does not yet enable cloud saving. Signing out clears session-only goals and schedules.
 
 Degree timelines now collect the first Fall/Spring term and year plus the student's current semester number. The final semester and count after the current semester use two semesters per academic year, excluding summers. Continue to schedules saves these preferences for the session. New schedule forms offer every semester from that starting date as a name template and default to the current semester; names remain editable. Changing the timeline updates templates without renaming existing schedules. Remaining required courses are not inferred from elapsed semesters.
+
+## Visual course planning
+
+Course map provides a reusable blank Computer Engineering 2026–27 flowchart template: tap or drag courses between semesters, inspect solid prerequisite and dotted co-requisite arrows, choose elective placeholders, review sequencing/term conflicts, and copy a semester into a schedule. No personal spreadsheet data or grades are preloaded. See [course map notes](docs/COURSE_MAP.md) for source limitations and editable data/layout files.
+
+
+File import is now available under **Course map → Import XLSX / PDF** and **New schedule → Import XLSX / PDF**. Imports have a course-review step and add/replace confirmation. Spreadsheet grades and personal progress are excluded. The supported EEC PDF uses a matching predefined flowchart; other text PDFs require credit/placement review and manual dependency arrows. Scanned PDFs are not supported yet.

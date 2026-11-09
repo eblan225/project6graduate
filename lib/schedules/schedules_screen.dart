@@ -3,18 +3,22 @@ import 'package:flutter/material.dart';
 import '../ui/app_theme.dart';
 import 'schedule.dart';
 import '../models/degree_timeline.dart';
+import '../planner/course_plan.dart';
 import 'create_schedule_screen.dart';
 import 'schedule_detail_screen.dart';
 
 class SchedulesScreen extends StatefulWidget {
-  const SchedulesScreen({super.key, this.timeline});
+  const SchedulesScreen({super.key, this.timeline, this.coursePlan});
   final DegreeTimeline? timeline;
+  final CoursePlan? coursePlan;
   @override
-  State<SchedulesScreen> createState() => _SchedulesScreenState();
+  State<SchedulesScreen> createState() => SchedulesScreenState();
 }
 
-class _SchedulesScreenState extends State<SchedulesScreen> {
+class SchedulesScreenState extends State<SchedulesScreen> {
   final schedules = <SemesterSchedule>[];
+  void addFromTemplate(SemesterSchedule schedule) =>
+      setState(() => schedules.add(schedule));
   Future<void> open(SemesterSchedule schedule) async {
     await Navigator.push(
       context,
@@ -29,7 +33,10 @@ class _SchedulesScreenState extends State<SchedulesScreen> {
     final result = await Navigator.push<SemesterSchedule>(
       context,
       MaterialPageRoute(
-        builder: (_) => CreateScheduleScreen(timeline: widget.timeline),
+        builder: (_) => CreateScheduleScreen(
+          timeline: widget.timeline,
+          coursePlan: widget.coursePlan,
+        ),
       ),
     );
     if (!mounted || result == null) return;

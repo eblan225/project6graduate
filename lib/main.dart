@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 
 import 'ui/app_theme.dart';
 import 'models/degree_timeline.dart';
+import 'planner/course_plan.dart';
+import 'planner/course_map_screen.dart';
+import 'schedules/schedule.dart';
 import 'auth/sign_in_screen.dart';
 import 'schedules/welcome_screen.dart';
 import 'schedules/schedules_screen.dart';
@@ -28,6 +31,14 @@ class _StartScreen extends StatefulWidget {
 class _StartScreenState extends State<_StartScreen> {
   int selected = 0;
   DegreeTimeline? timeline;
+  final coursePlan = CoursePlan();
+  final schedulesKey = GlobalKey<SchedulesScreenState>();
+  @override
+  void dispose() {
+    coursePlan.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
     body: IndexedStack(
@@ -39,7 +50,18 @@ class _StartScreenState extends State<_StartScreen> {
             selected = 1;
           }),
         ),
-        SchedulesScreen(timeline: timeline),
+        SchedulesScreen(
+          key: schedulesKey,
+          timeline: timeline,
+          coursePlan: coursePlan,
+        ),
+        CourseMapScreen(
+          plan: coursePlan,
+          timeline: timeline,
+          onCreateSchedule: (SemesterSchedule schedule) {
+            schedulesKey.currentState?.addFromTemplate(schedule);
+          },
+        ),
       ],
     ),
     bottomNavigationBar: NavigationBar(
@@ -53,6 +75,10 @@ class _StartScreenState extends State<_StartScreen> {
         NavigationDestination(
           icon: Icon(Icons.calendar_month_outlined),
           label: 'Semesters',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.account_tree_outlined),
+          label: 'Course map',
         ),
       ],
     ),
