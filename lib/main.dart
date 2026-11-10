@@ -1,29 +1,36 @@
 import 'package:flutter/material.dart';
 
-import 'ui/app_theme.dart';
-import 'models/degree_timeline.dart';
 import 'planner/course_plan.dart';
 import 'planner/course_map_screen.dart';
 import 'schedules/schedule.dart';
 import 'auth/sign_in_screen.dart';
-import 'schedules/welcome_screen.dart';
+import 'models/degree_timeline.dart';
+import 'schedules/schedule_repository.dart';
 import 'schedules/schedules_screen.dart';
+import 'schedules/welcome_screen.dart';
+import 'ui/app_theme.dart';
 
 void main() => runApp(const TigerTrackApp());
 
 class TigerTrackApp extends StatelessWidget {
-  const TigerTrackApp({super.key});
+  const TigerTrackApp({super.key, this.scheduleRepository});
+
+  final ScheduleRepository? scheduleRepository;
+
   @override
   Widget build(BuildContext context) => MaterialApp(
     title: 'Graduate!',
     debugShowCheckedModeBanner: false,
     theme: AppStyle.theme,
-    home: const AuthGate(child: _StartScreen()),
+    home: AuthGate(child: _StartScreen(scheduleRepository: scheduleRepository)),
   );
 }
 
 class _StartScreen extends StatefulWidget {
-  const _StartScreen();
+  const _StartScreen({required this.scheduleRepository});
+
+  final ScheduleRepository? scheduleRepository;
+
   @override
   State<_StartScreen> createState() => _StartScreenState();
 }
@@ -54,6 +61,7 @@ class _StartScreenState extends State<_StartScreen> {
           key: schedulesKey,
           timeline: timeline,
           coursePlan: coursePlan,
+          repository: widget.scheduleRepository,
         ),
         CourseMapScreen(
           plan: coursePlan,

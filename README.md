@@ -1,8 +1,8 @@
 # TigerTrack (Project 6)
 
-A phone-first Flutter app foundation for helping LSU students understand what degree requirements remain and estimate a semester-by-semester path to a target graduation date.
+A phone-first Flutter foundation for the intended LSU degree-planning app. The current build supports locally saved semester schedules and a configurable credit-load estimate; Workday access and verified LSU degree requirements remain future work.
 
-The current build is a prototype shell with synthetic sample data. It is not connected to LSU Workday and does not contain verified LSU degree requirements. The Workday import action is intentionally a placeholder until LSU confirms an approved access method. Do not enter Workday credentials into the app.
+It is not connected to LSU Workday and does not contain verified LSU degree requirements. Do not enter Workday credentials into the app.
 
 ## Run locally
 
@@ -13,7 +13,7 @@ flutter pub get
 flutter run
 ```
 
-The app includes overview, courses, graduation plan, and profile tabs. Course entries added in the prototype live only in memory and reset when the app restarts.
+The app includes Google sign-in or a guest preview, a welcome flow, semester list and templates, manual schedule editing, and a degree credit planner. Google OAuth needs platform setup; see [Google sign-in setup](docs/GOOGLE_SIGN_IN.md). Schedule data and degree-plan inputs are stored locally on the device and are not synced to an account or cloud service.
 
 ## Project docs
 
@@ -22,19 +22,19 @@ The app includes overview, courses, graduation plan, and profile tabs. Course en
 
 ## Current status
 
-Flutter phone-first UI and a replaceable `StudentDataSource` boundary are in place. The demo implementation uses synthetic records, not LSU curriculum data. Planning currently shows a simple evenly divided credit estimate; it does not match requirements, prerequisites, course offerings, or actual LSU rules.
+Students can create semesters, add/edit/remove class entries, and remove semesters. The credit planner accepts total required credits, completed credits, current-term credits, current term, target graduation term, and summer preference. It calculates the remaining credit load and distributes it across future terms. Students can also enter course codes completed/in progress and course codes required by their audit; the app shows required codes missing from the entered history. This manual comparison does not validate LSU requirements or match substitutions, and the credit estimate does not account for prerequisites or course availability. Workday access and authoritative LSU rules are not implemented.
 
-Local formatting, analysis, the widget test, and Android debug APK build have passed. GitHub Actions is configured in `.github/workflows/flutter-ci.yml`; its first hosted run is pending.
+Local formatting, `flutter analyze`, all Flutter tests, and the Android debug APK build passed. GitHub Actions is configured in `.github/workflows/flutter-ci.yml`; its first hosted run is pending.
 
 ## Mockup-based starting screens
 
-The current entry flow is Graduate!: welcome → empty schedules → manual semester entry → editable class list / calendar preview. The previous academic demo screens and data-source boundary remain available in the source for future integration. No account credentials are collected. File upload, authentication, and timed calendar placement are placeholders; schedules reset on app restart.
+The current entry flow is Graduate!: sign-in/guest choice → degree timeline preferences → semester schedules → manual semester entry → editable class list / calendar preview. The degree credit planner is available from the schedules page. Older academic scaffolding remains in the source for future integration. Google sign-in is an identity scaffold and does not enable cloud sync. File upload and timed calendar placement are placeholders; goals remain in the session while schedules and credit-plan inputs persist locally.
 
 To change the layout later:
 
 - `lib/ui/app_theme.dart`: shared colors, control styles, page padding, maximum content width, and reusable page/empty-state widgets.
 - `lib/schedules/`: separate welcome, schedule list, creation, and semester detail screens.
-- `lib/schedules/schedule.dart`: session-only schedule records, separate from degree planning models.
+- `lib/schedules/schedule.dart`: serialized semester and class records, separate from degree planning models.
 - `lib/main.dart`: app entry and navigation into the schedule flow.
 
 Manual entry accepts one class per line, with an optional `|` followed by meeting-time notes. Tap a class to edit it, or use Add class. Calendar mode currently displays a clearly marked preview and the entered notes; it does not interpret times or place classes on a weekly grid.

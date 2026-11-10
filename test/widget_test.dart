@@ -1,12 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:project6graduate/main.dart';
+import 'package:project6graduate/models/degree_timeline.dart';
+import 'package:project6graduate/schedules/schedule.dart';
+import 'package:project6graduate/schedules/schedule_repository.dart';
+import 'package:project6graduate/schedules/schedules_screen.dart';
 
 void main() {
+  testWidgets('course map templates are saved and survive reopening', (
+    tester,
+  ) async {
+    final repository = MemoryScheduleRepository();
+    final key = GlobalKey<SchedulesScreenState>();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SchedulesScreen(key: key, repository: repository),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await key.currentState!.addFromTemplate(
+      SemesterSchedule(
+        name: 'Fall 2027',
+        classes: [ScheduleClass(name: 'MATH 1550')],
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Fall 2027'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpWidget(
+      MaterialApp(home: SchedulesScreen(repository: repository)),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Fall 2027'));
+    await tester.pumpAndSettle();
+    expect(find.text('MATH 1550'), findsOneWidget);
+  });
+
   testWidgets(
     'unconfigured Google sign-in offers guest preview and clears it on exit',
     (tester) async {
-      await tester.pumpWidget(const TigerTrackApp());
+      await tester.pumpWidget(
+        TigerTrackApp(scheduleRepository: MemoryScheduleRepository()),
+      );
       final button = tester.widget<OutlinedButton>(
         find.widgetWithText(OutlinedButton, 'Sign in with Google'),
       );
@@ -24,51 +59,18 @@ void main() {
   );
 
   testWidgets('create, edit, and reopen a semester schedule', (tester) async {
-    await tester.pumpWidget(const TigerTrackApp());
-    await tester.tap(find.text('Explore without signing in'));
-    await tester.pumpAndSettle();
-    await tester.enterText(
-      find.byType(TextFormField).at(0),
-      'Computer Science',
+    final repository = MemoryScheduleRepository();
+    const timeline = DegreeTimeline(
+      programYears: 4,
+      startYear: 2027,
+      startsInFall: true,
+      currentSemester: 2,
     );
-    await tester.scrollUntilVisible(
-      find.text('4-year program'),
-      200,
-      scrollable: find.byType(Scrollable).first,
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SchedulesScreen(repository: repository, timeline: timeline),
+      ),
     );
-    await tester.tap(find.text('4-year program'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('2-year program').last);
-    await tester.pumpAndSettle();
-    expect(find.text('Semester 4 · End of year 2'), findsOneWidget);
-    expect(find.text('Target term'), findsNothing);
-    expect(find.text('Target year'), findsNothing);
-    await tester.scrollUntilVisible(
-      find.widgetWithText(TextFormField, 'First semester year'),
-      -200,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.enterText(
-      find.widgetWithText(TextFormField, 'First semester year'),
-      '2027',
-    );
-    await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(
-      find.text('Current semester in your degree'),
-      200,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.tap(find.byType(DropdownButtonFormField<int>).last);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Semester 2 · Spring 2028').last);
-    await tester.pumpAndSettle();
-
-    await tester.scrollUntilVisible(
-      find.text('Continue to schedules'),
-      250,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.tap(find.text('Continue to schedules'));
     await tester.pumpAndSettle();
     expect(find.text('A fresh start'), findsOneWidget);
     await tester.tap(find.text('New schedule'));
@@ -125,13 +127,28 @@ void main() {
     expect(find.text('Tue 10 AM'), findsOneWidget);
     await tester.pageBack();
     await tester.pumpAndSettle();
-    await tester.tap(find.text('My goals'));
-    await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(
-      find.text('What is your major?'),
-      -200,
-      scrollable: find.byType(Scrollable).first,
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SchedulesScreen(repository: repository, timeline: timeline),
+      ),
     );
-    expect(find.text('Computer Science'), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(find.text('Spring 2027'), findsOneWidget);
   });
+}
+
+class MemoryScheduleRepository implements ScheduleRepository {
+  List<SemesterSchedule> saved = [];
+
+  @override
+  Future<List<SemesterSchedule>> load() async => saved
+      .map((schedule) => SemesterSchedule.fromJson(schedule.toJson()))
+      .toList();
+
+  @override
+  Future<void> save(List<SemesterSchedule> schedules) async {
+    saved = schedules
+        .map((schedule) => SemesterSchedule.fromJson(schedule.toJson()))
+        .toList();
+  }
 }

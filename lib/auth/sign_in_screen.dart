@@ -64,7 +64,7 @@ class SignInScreen extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           const Text(
-            'Google shares your basic profile and email to sign you in. Schedules and goals stay in this session; cloud saving is not connected yet.',
+            'Google shares your basic profile and email to sign you in. Schedules are saved on this device; goals remain in this session. Cloud sync is not connected yet.',
             textAlign: TextAlign.center,
             style: TextStyle(height: 1.5, color: Color(0xFF767085)),
           ),
@@ -126,7 +126,7 @@ class _AuthGateState extends State<AuthGate> {
                   onPressed: auth.busy
                       ? null
                       : () async {
-                          // Removing the child clears session-only goals and schedules.
+                          // Guest session goals reset when the app returns to this gate.
                           if (guest) {
                             setState(() => guest = false);
                           } else {

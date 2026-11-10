@@ -40,6 +40,9 @@ This is the end-to-end checklist for the LSU degree-planning app. The app remain
 - [ ] Track term availability and credit-hour ranges for courses when authoritative data is available.
 - [ ] Match completed and in-progress courses to requirement slots and flag uncertain matches for review.
 - [ ] Calculate remaining course and credit requirements without double-counting courses.
+- [x] Calculate a configurable remaining-credit estimate across terms through a student-selected target term.
+- [x] Add a manual course-code comparison prototype that lists entered requirements absent from the completed/in-progress list.
+- [ ] Match individual completed/current courses against authoritative degree requirements to calculate specific classes still needed.
 - [ ] Build a semester planner for the selected graduation term, honoring prerequisites and term availability.
 - [ ] Calculate the minimum feasible credits per term and flag targets that cannot be met from available terms.
 - [ ] Support student constraints such as preferred term load, summer enrollment, and already planned courses.
@@ -50,9 +53,11 @@ This is the end-to-end checklist for the LSU degree-planning app. The app remain
 ## 5. Flutter mobile app experience
 
 - [x] Replace the default counter with a phone-first Flutter app shell and bottom navigation.
-- [x] Add overview, course list, semester-plan, and profile screens.
-- [x] Add manual course-entry UI and completed/current/planned course filters.
-- [x] Clearly label synthetic demo records and unconfigured Workday integration.
+- [x] Add welcome, semester list, semester creation, and schedule detail screens.
+- [x] Add manual semester schedule creation and class add/edit/remove actions.
+- [x] Persist manually entered semester schedules on-device and restore them on launch.
+- [ ] Add degree course history with completed/current/planned statuses and verified credit totals.
+- [x] Clearly state in the app that Workday and official degree audit are not connected.
 - [ ] Add onboarding for program, catalog year, credits, and target graduation term.
 - [ ] Add a guided Workday import and record-review flow for the approved access method.
 - [ ] Show requirements satisfied, remaining, and needing student/adviser review.
@@ -95,4 +100,4 @@ This is the end-to-end checklist for the LSU degree-planning app. The app remain
 
 ## Current verification
 
-Local checks completed: Dart formatting check passed; `flutter analyze` reported no issues; `flutter test` passed the app navigation smoke test; `flutter build apk --debug` succeeded. The GitHub Actions workflow itself has not yet run on GitHub. Workday access, LSU requirements, and calculation correctness are not implemented or validated.
+Local checks passed: Dart formatting check, `flutter analyze`, all Flutter tests, and `flutter build apk --debug`. The GitHub Actions workflow itself has not yet run on GitHub. Workday access, authoritative LSU requirements, and validation against adviser-reviewed degree plans are not implemented.
