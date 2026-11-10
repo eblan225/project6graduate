@@ -13,18 +13,28 @@ class ImportCourse {
     this.credits,
     this.semester, {
     this.include = true,
+    this.minimumC = false,
+    this.offered,
   });
   String id, title;
   int? credits;
   int semester;
   bool include;
+  final bool minimumC;
+  final String? offered;
 }
 
 class CourseImport {
-  CourseImport(this.courses, this.note, {this.supportedFlowchart = false});
+  CourseImport(
+    this.courses,
+    this.note, {
+    this.supportedFlowchart = false,
+    List<CourseLink>? links,
+  }) : links = links ?? [];
   final List<ImportCourse> courses;
   final String note;
   final bool supportedFlowchart;
+  final List<CourseLink> links;
 }
 
 final courseCodePattern = RegExp(r'\b([A-Z]{2,5})\s+(\d{4}[A-Z]?)\b');
@@ -161,6 +171,7 @@ CourseImport parseCoursePdfText(String text) {
           .toList(),
       'Recognized EEC 2026–27 flowchart. Courses, elective slots, semester placements and solid/dotted arrows use the matching built-in transcription. Review before applying. This is template matching, not general PDF arrow recognition.',
       supportedFlowchart: true,
+      links: List.of(eecLinks),
     );
   }
   if (ids.isEmpty) {

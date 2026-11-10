@@ -7,7 +7,6 @@ import '../schedules/schedule.dart';
 import '../ui/app_theme.dart';
 import 'course_plan.dart';
 import 'course_template.dart';
-import '../importing/import_courses_screen.dart';
 
 class CourseMapScreen extends StatefulWidget {
   const CourseMapScreen({
@@ -42,19 +41,6 @@ class _CourseMapScreenState extends State<CourseMapScreen> {
   void dispose() {
     transform.dispose();
     super.dispose();
-  }
-
-  Future<void> openImport() async {
-    final result = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(builder: (_) => ImportCoursesScreen(plan: widget.plan)),
-    );
-    if (result == true && mounted) {
-      setState(() {
-        selected = null;
-        transform.value = Matrix4.identity();
-      });
-    }
   }
 
   Future<void> details(TemplateCourse course) async {
@@ -366,11 +352,6 @@ class _CourseMapScreenState extends State<CourseMapScreen> {
           title: const Text('Course map'),
           actions: [
             IconButton(
-              tooltip: 'Import XLSX or PDF',
-              icon: const Icon(Icons.upload_file_outlined),
-              onPressed: openImport,
-            ),
-            IconButton(
               tooltip: 'Fit map',
               onPressed: () {
                 if (diagramSize.isEmpty) return;
@@ -447,11 +428,6 @@ class _CourseMapScreenState extends State<CourseMapScreen> {
                   Wrap(
                     spacing: 8,
                     children: [
-                      TextButton.icon(
-                        onPressed: openImport,
-                        icon: const Icon(Icons.upload_file_outlined),
-                        label: const Text('Import XLSX / PDF'),
-                      ),
                       TextButton.icon(
                         onPressed: () => showModalBottomSheet<void>(
                           context: context,

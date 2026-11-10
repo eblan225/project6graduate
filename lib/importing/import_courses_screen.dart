@@ -1,3 +1,6 @@
+import 'dart:ui' as ui;
+import 'dart:math' as math;
+
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,11 +10,18 @@ import '../planner/course_plan.dart';
 import '../planner/course_template.dart';
 import '../ui/app_theme.dart';
 import 'course_import.dart';
+import 'flowchart_layout.dart';
 import 'course_file_picker.dart';
 
 class ImportCoursesScreen extends StatefulWidget {
-  const ImportCoursesScreen({super.key, required this.plan, this.pickFile});
+  const ImportCoursesScreen({
+    super.key,
+    required this.plan,
+    this.pickFile,
+    this.initialMerge = true,
+  });
   final CoursePlan plan;
+  final bool initialMerge;
   final Future<XFile?> Function()? pickFile;
   @override
   State<ImportCoursesScreen> createState() => _ImportCoursesScreenState();
@@ -20,7 +30,16 @@ class ImportCoursesScreen extends StatefulWidget {
 class _ImportCoursesScreenState extends State<ImportCoursesScreen> {
   CourseImport? draft;
   String? fileName, error;
-  bool busy = false, merge = true;
+  bool busy = false;
+  late bool merge;
+
+  @override
+  void initState() {
+    super.initState();
+    merge = widget.initialMerge;
+  }
+
+  List<Uint8List> previews = [];
   final form = GlobalKey<FormState>();
   Future<void> pick() async {
     setState(() {
@@ -37,6 +56,7 @@ class _ImportCoursesScreenState extends State<ImportCoursesScreen> {
       }
       final bytes = await file.readAsBytes();
       CourseImport result;
+      final images = <Uint8List>[];
       if (file.name.toLowerCase().endsWith('.xlsx')) {
         result = parseAcademicXlsx(bytes);
       } else if (file.name.toLowerCase().endsWith('.pdf')) {
@@ -46,11 +66,100 @@ class _ImportCoursesScreenState extends State<ImportCoursesScreen> {
           if (doc.pages.length > 30) {
             throw const FormatException('Use a PDF with 30 pages or fewer.');
           }
-          final text = StringBuffer();
+          final results = <CourseImport>[];
           for (final page in doc.pages) {
-            text.writeln((await page.loadText())?.fullText ?? '');
+            final raw = await page.loadText();
+            final scale = 1800 / math.max(page.width, page.height);
+            final image = await page.render(
+              fullWidth: page.width * scale,
+              fullHeight: page.height * scale,
+            );
+            if (image == null) {
+              throw const FormatException('Could not render PDF page.');
+            }
+            try {
+              final text = <ChartText>[];
+              if (raw != null) {
+                for (
+                  var i = 0;
+                  i < raw.fullText.length && i < raw.charRects.length;
+                  i++
+                ) {
+                  final r = raw.charRects[i].rotate(page.rotation.index, page);
+                  if (raw.fullText[i] == '\n' ||
+                      raw.fullText[i] == '\r' ||
+                      r.width <= 0 ||
+                      r.height <= 0) {
+                    continue;
+                  }
+                  text.add(
+                    ChartText(
+                      raw.fullText[i],
+                      Rect.fromLTRB(
+                        r.left * scale,
+                        (page.height - r.top) * scale,
+                        r.right * scale,
+                        (page.height - r.bottom) * scale,
+                      ),
+                    ),
+                  );
+                }
+              }
+              try {
+                results.add(
+                  parseFlowchartPages([
+                    FlowchartPage(
+                      image.width,
+                      image.height,
+                      image.pixels,
+                      text,
+                    ),
+                  ], pageNumberOffset: page.pageNumber - 1),
+                );
+              } on FormatException {
+                // Cover/legend-only pages have no importable courses.
+              }
+              final buffer = await ui.ImmutableBuffer.fromUint8List(
+                image.pixels,
+              );
+              final descriptor = ui.ImageDescriptor.raw(
+                buffer,
+                width: image.width,
+                height: image.height,
+                pixelFormat: ui.PixelFormat.bgra8888,
+              );
+              final codec = await descriptor.instantiateCodec();
+              final frame = await codec.getNextFrame();
+              final png = await frame.image.toByteData(
+                format: ui.ImageByteFormat.png,
+              );
+              if (png != null) images.add(png.buffer.asUint8List());
+              frame.image.dispose();
+              codec.dispose();
+              descriptor.dispose();
+              buffer.dispose();
+            } finally {
+              image.dispose();
+            }
           }
-          result = parseCoursePdfText(text.toString());
+          if (results.isEmpty) {
+            throw const FormatException(
+              'No course boxes or course codes found. Use a text-based PDF; scanned files need OCR.',
+            );
+          }
+          result = results.length == 1
+              ? results.single
+              : CourseImport(
+                  {
+                    for (final r in results)
+                      for (final c in r.courses) c.id: c,
+                  }.values.toList(),
+                  results.map((r) => r.note).toSet().join('\n\n'),
+                  links: [
+                    for (final r in results)
+                      ...r.supportedFlowchart ? eecLinks : r.links,
+                  ],
+                );
         } finally {
           await doc.dispose();
         }
@@ -60,6 +169,7 @@ class _ImportCoursesScreenState extends State<ImportCoursesScreen> {
       if (!mounted) return;
       setState(() {
         draft = result;
+        previews = images;
         fileName = file.name;
       });
     } on MissingPluginException {
@@ -118,6 +228,47 @@ class _ImportCoursesScreenState extends State<ImportCoursesScreen> {
             Text(fileName!, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             Text(draft!.note),
+            for (var i = 0; i < previews.length; i++)
+              ExpansionTile(
+                title: Text('Original flowchart • Page ${i + 1}'),
+                children: [
+                  SizedBox(
+                    height: 400,
+                    child: InteractiveViewer(
+                      maxScale: 6,
+                      child: Image.memory(previews[i]),
+                    ),
+                  ),
+                ],
+              ),
+            const SizedBox(height: 12),
+            const Text(
+              'Review connections',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const Text(
+              'Confirm direction and type against the original. Crossing, dashed and alternative paths may need to be added here.',
+            ),
+            for (final link in List.of(draft!.links))
+              ListTile(
+                title: Text('${link.from} → ${link.to}'),
+                subtitle: Text(
+                  link.concurrent
+                      ? 'Credit or registration required'
+                      : 'Credit required',
+                ),
+                onTap: () => editLink(link),
+                trailing: IconButton(
+                  icon: const Icon(Icons.close),
+                  tooltip: 'Remove connection',
+                  onPressed: () => setState(() => draft!.links.remove(link)),
+                ),
+              ),
+            TextButton.icon(
+              onPressed: () => editLink(null),
+              icon: const Icon(Icons.add_link),
+              label: const Text('Add connection'),
+            ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               value: merge,
@@ -158,6 +309,86 @@ class _ImportCoursesScreenState extends State<ImportCoursesScreen> {
       ),
     ),
   );
+
+  Future<void> editLink(CourseLink? existing) async {
+    final ids = draft!.courses
+        .where((c) => c.include)
+        .map((c) => c.id)
+        .toList();
+    if (ids.length < 2) return;
+    var from = ids.contains(existing?.from) ? existing!.from : ids.first;
+    var to = ids.contains(existing?.to) ? existing!.to : ids[1];
+    var concurrent = existing?.concurrent ?? false;
+    final result = await showDialog<CourseLink>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, refresh) => AlertDialog(
+          title: const Text('Review connection'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<String>(
+                  initialValue: from,
+                  isExpanded: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Required course',
+                  ),
+                  items: ids
+                      .map((id) => DropdownMenuItem(value: id, child: Text(id)))
+                      .toList(),
+                  onChanged: (value) => refresh(() => from = value!),
+                ),
+                DropdownButtonFormField<String>(
+                  initialValue: to,
+                  isExpanded: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Following course',
+                  ),
+                  items: ids
+                      .map((id) => DropdownMenuItem(value: id, child: Text(id)))
+                      .toList(),
+                  onChanged: (value) => refresh(() => to = value!),
+                ),
+                SwitchListTile(
+                  title: const Text('Credit or registration allowed'),
+                  subtitle: const Text('Dashed/open arrow in this flowchart'),
+                  value: concurrent,
+                  onChanged: (v) => refresh(() => concurrent = v),
+                ),
+                if (from == to) const Text('Choose two different courses.'),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: from == to
+                  ? null
+                  : () => Navigator.pop(
+                      context,
+                      CourseLink(from, to, concurrent: concurrent),
+                    ),
+              child: const Text('Save connection'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (result != null && mounted) {
+      setState(() {
+        draft!.links.removeWhere(
+          (l) =>
+              identical(l, existing) ||
+              (l.from == result.from && l.to == result.to),
+        );
+        draft!.links.add(result);
+      });
+    }
+  }
 
   Future<void> edit(ImportCourse course) async {
     final credits = TextEditingController(
@@ -278,19 +509,17 @@ class _ImportCoursesScreenState extends State<ImportCoursesScreen> {
         r.title,
         r.credits!,
         r.semester,
-        minimumC: known?.minimumC ?? false,
-        offered: known?.offered,
+        minimumC: known?.minimumC ?? r.minimumC,
+        offered: known?.offered ?? r.offered,
         choices: known?.choices ?? const [],
       );
     }).toList();
     final ids = courses.map((c) => c.id).toSet();
     widget.plan.importCourses(
       courses,
-      draft!.supportedFlowchart
-          ? eecLinks
-                .where((l) => ids.contains(l.from) && ids.contains(l.to))
-                .toList()
-          : [],
+      draft!.links
+          .where((l) => ids.contains(l.from) && ids.contains(l.to))
+          .toList(),
       merge: merge,
     );
     Navigator.pop(context, true);

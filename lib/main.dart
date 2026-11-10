@@ -61,6 +61,7 @@ class _StartScreenState extends State<_StartScreen> {
           key: schedulesKey,
           timeline: timeline,
           coursePlan: coursePlan,
+          onOpenCourseMap: () => setState(() => selected = 2),
           repository: widget.scheduleRepository,
         ),
         CourseMapScreen(

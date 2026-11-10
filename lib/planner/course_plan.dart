@@ -9,6 +9,7 @@ class CoursePlan extends ChangeNotifier {
   List<TemplateCourse> courses = List.of(eecCourses);
   List<CourseLink> links = List.of(eecLinks);
   bool usesEecRules = true;
+  bool hasImportedCourses = false;
   String title = 'Computer Engineering · 2026–27';
 
   void importCourses(
@@ -16,6 +17,7 @@ class CoursePlan extends ChangeNotifier {
     List<CourseLink> incomingLinks, {
     required bool merge,
   }) {
+    hasImportedCourses = true;
     if (!merge) {
       courses = [];
       links = [];

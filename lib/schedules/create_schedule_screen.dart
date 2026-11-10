@@ -4,7 +4,6 @@ import '../ui/app_theme.dart';
 import 'schedule.dart';
 import '../models/degree_timeline.dart';
 import '../planner/course_plan.dart';
-import '../importing/import_courses_screen.dart';
 
 class CreateScheduleScreen extends StatefulWidget {
   const CreateScheduleScreen({super.key, this.timeline, this.coursePlan});
@@ -18,11 +17,80 @@ class _CreateScheduleScreenState extends State<CreateScheduleScreen> {
   final form = GlobalKey<FormState>();
   final name = TextEditingController();
   final classes = TextEditingController();
+  late int semester;
+  String filledCourses = '';
+
+  String semesterCourses() {
+    final plan = widget.coursePlan;
+    if (plan == null) return '';
+    return plan.courses
+        .where(
+          (c) =>
+              plan.placements[c.id] == semester &&
+              plan.status(c.id) != PlanStatus.completed,
+        )
+        .map((c) => '${plan.label(c)} — ${c.title}')
+        .join('\n');
+  }
+
+  void selectSemester(int value) {
+    final canRefresh = classes.text.isEmpty || classes.text == filledCourses;
+    setState(() {
+      semester = value;
+      name.text = widget.timeline?.semesterLabel(value) ?? 'Semester $value';
+      if (canRefresh) {
+        filledCourses = semesterCourses();
+        classes.text = filledCourses;
+      }
+    });
+    if (!canRefresh) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Your class edits were kept. Use map courses to load the selected semester.',
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> useMapCourses() async {
+    if (classes.text.isNotEmpty && classes.text != filledCourses) {
+      final replace = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Replace your class list?'),
+          content: const Text(
+            'Load courses from this semester of your degree map in place of the classes entered here.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Use map courses'),
+            ),
+          ],
+        ),
+      );
+      if (!mounted || replace != true) return;
+    }
+    setState(() {
+      filledCourses = semesterCourses();
+      classes.text = filledCourses;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     final plan = widget.timeline;
-    if (plan != null) name.text = plan.semesterLabel(plan.currentSemester);
+    semester = plan?.currentSemester ?? 1;
+    name.text = plan?.semesterLabel(semester) ?? 'Semester $semester';
+    filledCourses = semesterCourses();
+    classes.text = filledCourses;
   }
 
   @override
@@ -45,7 +113,7 @@ class _CreateScheduleScreenState extends State<CreateScheduleScreen> {
           ),
           const SizedBox(height: 12),
           const Text(
-            'Start with a semester and a few classes. You can add details later.',
+            'Plan one semester at a time. Courses from your degree map are added below; adjust them or enter your own.',
           ),
           const SizedBox(height: 28),
           if (widget.timeline != null) ...[
@@ -53,7 +121,7 @@ class _CreateScheduleScreenState extends State<CreateScheduleScreen> {
               initialValue: widget.timeline!.semesterLabel(
                 widget.timeline!.currentSemester,
               ),
-              decoration: const InputDecoration(labelText: 'Semester template'),
+              decoration: const InputDecoration(labelText: 'Semester'),
               isExpanded: true,
               items: widget.timeline!.semesterNames
                   .map(
@@ -62,13 +130,31 @@ class _CreateScheduleScreenState extends State<CreateScheduleScreen> {
                   )
                   .toList(),
               onChanged: (value) {
-                if (value != null) name.text = value;
+                if (value != null) {
+                  selectSemester(
+                    widget.timeline!.semesterNames.indexOf(value) + 1,
+                  );
+                }
               },
             ),
             const SizedBox(height: 16),
-          ] else ...[
-            const Text(
-              'Set your first semester in My goals to get semester templates.',
+          ] else if (widget.coursePlan != null) ...[
+            DropdownButtonFormField<int>(
+              initialValue: semester,
+              decoration: const InputDecoration(labelText: 'Semester'),
+              items: List.generate(
+                widget.coursePlan!.placements.values.fold<int>(
+                  1,
+                  (a, b) => a > b ? a : b,
+                ),
+                (i) => DropdownMenuItem(
+                  value: i + 1,
+                  child: Text('Semester ${i + 1}'),
+                ),
+              ),
+              onChanged: (value) {
+                if (value != null) selectSemester(value);
+              },
             ),
             const SizedBox(height: 16),
           ],
@@ -82,67 +168,33 @@ class _CreateScheduleScreenState extends State<CreateScheduleScreen> {
                 v == null || v.trim().isEmpty ? 'Enter a semester name' : null,
           ),
           const SizedBox(height: 20),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  const Icon(
-                    Icons.upload_file_outlined,
-                    color: AppStyle.purple,
-                    size: 32,
-                  ),
-                  const SizedBox(height: 12),
-                  const Text('Import courses from XLSX or PDF'),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Review your file, then arrange courses in Course map. Grades and personal progress are excluded.',
-                    textAlign: TextAlign.center,
-                  ),
-                  if (widget.coursePlan != null) ...[
-                    const SizedBox(height: 12),
-                    OutlinedButton(
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute<bool>(
-                          builder: (_) =>
-                              ImportCoursesScreen(plan: widget.coursePlan!),
-                        ),
-                      ),
-                      child: const Text('Import XLSX / PDF'),
+          if (widget.coursePlan != null) ...[
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Courses for this semester',
+                      style: TextStyle(fontWeight: FontWeight.w700),
                     ),
-                    TextButton(
-                      onPressed: () {
-                        final labels = widget.timeline?.semesterNames ?? [];
-                        final index = labels.indexOf(name.text.trim());
-                        if (index < 0) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Choose a semester template first.',
-                              ),
-                            ),
-                          );
-                          return;
-                        }
-                        final plan = widget.coursePlan!;
-                        final rows = plan.courses.where(
-                          (c) =>
-                              plan.placements[c.id] == index + 1 &&
-                              plan.status(c.id) != PlanStatus.completed,
-                        );
-                        classes.text = rows
-                            .map((c) => '${plan.label(c)} — ${c.title}')
-                            .join('\n');
-                      },
-                      child: const Text('Use this semester’s map courses'),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Use the courses already placed in your degree map. Completed courses are left out. You can edit the list before creating this schedule.',
+                    ),
+                    const SizedBox(height: 8),
+                    TextButton.icon(
+                      onPressed: useMapCourses,
+                      icon: const Icon(Icons.account_tree_outlined),
+                      label: const Text('Use this semester’s map courses'),
                     ),
                   ],
-                ],
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 24),
+            const SizedBox(height: 24),
+          ],
           TextFormField(
             controller: classes,
             minLines: 6,

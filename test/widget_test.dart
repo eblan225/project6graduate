@@ -1,12 +1,100 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:project6graduate/main.dart';
+import 'package:project6graduate/planner/course_plan.dart';
+import 'package:project6graduate/planner/course_template.dart';
+import 'package:project6graduate/schedules/create_schedule_screen.dart';
 import 'package:project6graduate/models/degree_timeline.dart';
 import 'package:project6graduate/schedules/schedule.dart';
 import 'package:project6graduate/schedules/schedule_repository.dart';
 import 'package:project6graduate/schedules/schedules_screen.dart';
 
 void main() {
+  testWidgets('degree upload comes before empty semester schedules', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1000, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+    final plan = CoursePlan();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SchedulesScreen(
+          repository: MemoryScheduleRepository(),
+          coursePlan: plan,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      tester.getTopLeft(find.text('Your degree path')).dy,
+      lessThan(tester.getTopLeft(find.text('Semester schedules')).dy),
+    );
+    await tester.tap(find.text('Upload degree flowchart'));
+    await tester.pumpAndSettle();
+    expect(find.text('Choose XLSX or PDF'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.text('Your degree path'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    plan.dispose();
+  });
+
+  testWidgets(
+    'one semester loads existing map courses and protects manual edits',
+    (tester) async {
+      tester.view.physicalSize = const Size(1000, 1400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+      final plan = CoursePlan();
+      plan.importCourses(
+        [
+          const TemplateCourse('TEST 1001', 'First term', 3, 1),
+          const TemplateCourse('TEST 1002', 'Already completed', 3, 1),
+          const TemplateCourse('TEST 2001', 'Second term', 3, 2),
+        ],
+        [],
+        merge: false,
+      );
+      plan.update('TEST 1002', PlanStatus.completed, 'A', null);
+      await tester.pumpWidget(
+        MaterialApp(home: CreateScheduleScreen(coursePlan: plan)),
+      );
+      final field = find.widgetWithText(TextFormField, 'Your classes');
+      String classes() => tester.widget<TextFormField>(field).controller!.text;
+      expect(classes(), 'TEST 1001 — First term');
+      expect(find.text('Import XLSX / PDF'), findsNothing);
+      await tester.tap(find.byType(DropdownButtonFormField<int>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Semester 2').last);
+      await tester.pumpAndSettle();
+      expect(classes(), 'TEST 2001 — Second term');
+      await tester.ensureVisible(field);
+      await tester.enterText(field, 'MY 1234 / Tue 10 AM');
+      await tester.ensureVisible(find.byType(DropdownButtonFormField<int>));
+      await tester.tap(find.byType(DropdownButtonFormField<int>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Semester 1').last);
+      await tester.pumpAndSettle();
+      expect(classes(), 'MY 1234 / Tue 10 AM');
+      await tester.ensureVisible(find.text('Use this semester’s map courses'));
+      await tester.tap(find.text('Use this semester’s map courses'));
+      await tester.pumpAndSettle();
+      expect(find.text('Replace your class list?'), findsOneWidget);
+      await tester.tap(find.text('Use map courses'));
+      await tester.pumpAndSettle();
+      expect(classes(), 'TEST 1001 — First term');
+      await tester.pumpWidget(const SizedBox.shrink());
+      plan.dispose();
+    },
+  );
+
   testWidgets('course map templates are saved and survive reopening', (
     tester,
   ) async {

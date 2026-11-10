@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../degree_planning/degree_plan_screen.dart';
+import '../importing/import_courses_screen.dart';
+import '../planner/course_map_screen.dart';
 import '../ui/app_theme.dart';
 import 'schedule.dart';
 import '../models/degree_timeline.dart';
@@ -15,10 +17,12 @@ class SchedulesScreen extends StatefulWidget {
     this.repository,
     this.timeline,
     this.coursePlan,
+    this.onOpenCourseMap,
   });
   final ScheduleRepository? repository;
   final DegreeTimeline? timeline;
   final CoursePlan? coursePlan;
+  final VoidCallback? onOpenCourseMap;
   @override
   State<SchedulesScreen> createState() => SchedulesScreenState();
 }
@@ -93,6 +97,34 @@ class SchedulesScreenState extends State<SchedulesScreen> {
       ),
     );
     if (mounted) await _persist();
+  }
+
+  Future<void> uploadDegreePath() async {
+    await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            ImportCoursesScreen(plan: widget.coursePlan!, initialMerge: false),
+      ),
+    );
+    if (mounted) setState(() {});
+  }
+
+  void openDegreePath() {
+    if (widget.onOpenCourseMap != null) {
+      widget.onOpenCourseMap!();
+      return;
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (_) => CourseMapScreen(
+          plan: widget.coursePlan!,
+          timeline: widget.timeline,
+          onCreateSchedule: addFromTemplate,
+        ),
+      ),
+    );
   }
 
   Future<void> create() async {
@@ -173,7 +205,7 @@ class SchedulesScreenState extends State<SchedulesScreen> {
                     ),
                     SizedBox(height: 16),
                     Text(
-                      'Schedules are stored on this device. Account sync is not connected yet. Import courses from the Course map tab.',
+                      'Schedules are stored on this device. Account sync is not connected yet. Upload your degree flowchart above your semester schedules.',
                     ),
                     SizedBox(height: 16),
                     Text(
@@ -218,12 +250,73 @@ class SchedulesScreenState extends State<SchedulesScreen> {
                 'A home for your classes and the plans ahead.',
                 style: TextStyle(color: Color(0xFF767085)),
               ),
-              const SizedBox(height: 36),
+              const SizedBox(height: 28),
+              if (widget.coursePlan != null) ...[
+                ListenableBuilder(
+                  listenable: widget.coursePlan!,
+                  builder: (context, _) => Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(
+                            Icons.account_tree_outlined,
+                            color: AppStyle.purple,
+                            size: 32,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Your degree path',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Start with your full degree flowchart, then build a schedule for each semester.',
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            widget.coursePlan!.hasImportedCourses
+                                ? '${widget.coursePlan!.courses.length} courses and requirements in your degree map'
+                                : 'A Computer Engineering example is available. Upload your flowchart to use your own degree path.',
+                          ),
+                          const SizedBox(height: 16),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              FilledButton.icon(
+                                onPressed: uploadDegreePath,
+                                icon: const Icon(Icons.upload_file_outlined),
+                                label: const Text('Upload degree flowchart'),
+                              ),
+                              OutlinedButton.icon(
+                                onPressed: openDegreePath,
+                                icon: const Icon(Icons.account_tree_outlined),
+                                label: const Text('View degree map'),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Your degree map stays in this session.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF767085),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 28),
+              ],
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Schedules',
+                    'Semester schedules',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   Text(
@@ -237,7 +330,7 @@ class SchedulesScreenState extends State<SchedulesScreen> {
                 const EmptyPanel(
                   icon: Icons.event_note_outlined,
                   title: 'A fresh start',
-                  message: 'No schedules yet. Create your first semester and start adding classes.',
+                  message: 'No semester schedules yet. Start with your degree path above, then create one semester using its map courses or your own class list.',
                 ),
               for (final schedule in schedules)
                 Card(
