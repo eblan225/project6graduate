@@ -251,7 +251,9 @@ class _ImportCoursesScreenState extends State<ImportCoursesScreen> {
             ),
             for (final link in List.of(draft!.links))
               ListTile(
-                title: Text('${link.from} → ${link.to}'),
+                title: Text(
+                  '${courseDisplayId(link.from)} → ${courseDisplayId(link.to)}',
+                ),
                 subtitle: Text(
                   link.concurrent
                       ? 'Credit or registration required'
@@ -287,7 +289,7 @@ class _ImportCoursesScreenState extends State<ImportCoursesScreen> {
                   value: draft!.courses[i].include,
                   onChanged: (v) =>
                       setState(() => draft!.courses[i].include = v!),
-                  title: Text(draft!.courses[i].id),
+                  title: Text(courseDisplayId(draft!.courses[i].id)),
                   subtitle: Text(
                     '${draft!.courses[i].credits ?? 'Missing'} credits · Semester ${draft!.courses[i].semester}',
                   ),
@@ -335,7 +337,12 @@ class _ImportCoursesScreenState extends State<ImportCoursesScreen> {
                     labelText: 'Required course',
                   ),
                   items: ids
-                      .map((id) => DropdownMenuItem(value: id, child: Text(id)))
+                      .map(
+                        (id) => DropdownMenuItem(
+                          value: id,
+                          child: Text(courseDisplayId(id)),
+                        ),
+                      )
                       .toList(),
                   onChanged: (value) => refresh(() => from = value!),
                 ),
@@ -346,7 +353,12 @@ class _ImportCoursesScreenState extends State<ImportCoursesScreen> {
                     labelText: 'Following course',
                   ),
                   items: ids
-                      .map((id) => DropdownMenuItem(value: id, child: Text(id)))
+                      .map(
+                        (id) => DropdownMenuItem(
+                          value: id,
+                          child: Text(courseDisplayId(id)),
+                        ),
+                      )
                       .toList(),
                   onChanged: (value) => refresh(() => to = value!),
                 ),
@@ -400,7 +412,7 @@ class _ImportCoursesScreenState extends State<ImportCoursesScreen> {
     final yes = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
-        title: Text(course.id),
+        title: Text(courseDisplayId(course.id)),
         content: Form(
           key: key,
           child: SingleChildScrollView(

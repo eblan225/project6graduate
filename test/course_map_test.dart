@@ -27,10 +27,6 @@ void main() {
           ),
         ),
       );
-      expect(
-        find.textContaining('Imported files exclude grades and personal progress'),
-        findsOneWidget,
-      );
       await tester.tap(find.text('CHEM 1201'));
       await tester.pumpAndSettle();
       await tester.tap(find.byType(DropdownButtonFormField<int>));

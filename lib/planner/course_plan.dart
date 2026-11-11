@@ -59,7 +59,9 @@ class CoursePlan extends ChangeNotifier {
   final grades = <String, String>{};
   final selections = <String, String>{};
   PlanStatus status(String id) => statuses[id] ?? PlanStatus.planned;
-  String label(TemplateCourse c) => selections[c.id] ?? c.id;
+  String label(TemplateCourse c) => (selections[c.id] ?? '').trim().isNotEmpty
+      ? selections[c.id]!
+      : courseDisplayId(c.id);
   bool get hasEdits =>
       statuses.isNotEmpty ||
       grades.isNotEmpty ||
@@ -156,12 +158,12 @@ class CoursePlan extends ChangeNotifier {
         final needsC = source.minimumC || id.startsWith('EE ');
         if (!meetsGrade(link.from, minimumC: needsC)) {
           issues.add(
-            '${link.from}: completed grade must ${needsC ? 'meet C' : 'be passing'} or be reviewed before counting this dependency.',
+            '${courseDisplayId(link.from)}: completed grade must ${needsC ? 'meet C' : 'be passing'} or be reviewed before counting this dependency.',
           );
         }
       } else if (link.concurrent ? before > semester : before >= semester) {
         issues.add(
-          '${link.from} must be ${link.concurrent ? 'before or in the same semester' : 'in an earlier semester'}.',
+          '${courseDisplayId(link.from)} must be ${link.concurrent ? 'before or in the same semester' : 'in an earlier semester'}.',
         );
       }
     }

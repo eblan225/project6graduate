@@ -59,7 +59,9 @@ class _CourseMapScreenState extends State<CourseMapScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, refresh) => AlertDialog(
-          title: Text('${course.id} · ${course.credits} credits'),
+          title: Text(
+            '${widget.plan.label(course)} · ${course.credits} credits',
+          ),
           content: SizedBox(
             width: 400,
             child: SingleChildScrollView(
@@ -160,7 +162,7 @@ class _CourseMapScreenState extends State<CourseMapScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            '${link.concurrent ? '⇢ Co-requisite' : '→ Prerequisite'}: ${link.from}',
+                            '${link.concurrent ? '⇢ Co-requisite' : '→ Prerequisite'}: ${courseDisplayId(link.from)}',
                           ),
                         ),
                         IconButton(
@@ -233,7 +235,12 @@ class _CourseMapScreenState extends State<CourseMapScreen> {
               isExpanded: true,
               decoration: const InputDecoration(labelText: 'Required course'),
               items: candidates
-                  .map((v) => DropdownMenuItem(value: v.id, child: Text(v.id)))
+                  .map(
+                    (v) => DropdownMenuItem(
+                      value: v.id,
+                      child: Text(widget.plan.label(v)),
+                    ),
+                  )
                   .toList(),
               onChanged: (v) => from = v!,
             ),
@@ -349,7 +356,8 @@ class _CourseMapScreenState extends State<CourseMapScreen> {
       final count = issues.values.where((v) => v.isNotEmpty).length;
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Course map'),
+          toolbarHeight: 44,
+          title: const Text('Course map', style: TextStyle(fontSize: 18)),
           actions: [
             IconButton(
               tooltip: 'Fit map',
@@ -398,32 +406,18 @@ class _CourseMapScreenState extends State<CourseMapScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     '${widget.plan.title} · ${widget.plan.courses.fold<int>(0, (sum, c) => sum + c.credits)} credits',
-                    style: TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Tap a course to place it. Long-press and drag to a semester header. Pinch to zoom; drag the map to pan.',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    '→ Prerequisite    ⇢ Dotted: co-requisite    C: minimum C\nImported files exclude grades and personal progress',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                  if (widget.timeline == null)
-                    const Text(
-                      'Save My goals to attach calendar dates and create schedule copies.',
-                      style: TextStyle(color: AppStyle.purple),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
                     ),
-                  Text(
-                    '$count courses need review · Tap Review to inspect',
-                    style: const TextStyle(fontSize: 12),
                   ),
                   Wrap(
                     spacing: 8,
@@ -453,7 +447,7 @@ class _CourseMapScreenState extends State<CourseMapScreen> {
                                     (c) => issues[c.id]!.isNotEmpty,
                                   ))
                                     ListTile(
-                                      title: Text(c.id),
+                                      title: Text(widget.plan.label(c)),
                                       subtitle: Text(issues[c.id]!.join('\n')),
                                     ),
                                   if (count == 0)
@@ -466,7 +460,7 @@ class _CourseMapScreenState extends State<CourseMapScreen> {
                           ),
                         ),
                         icon: const Icon(Icons.rule),
-                        label: const Text('Review'),
+                        label: Text('Review ($count)'),
                       ),
                       TextButton.icon(
                         onPressed: widget.timeline == null
@@ -483,7 +477,7 @@ class _CourseMapScreenState extends State<CourseMapScreen> {
             Expanded(
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  const laneWidth = 246.0, cardHeight = 132.0, step = 160.0;
+                  const laneWidth = 150.0, cardHeight = 76.0, step = 94.0;
                   final groups = List.generate(
                     columns,
                     (i) => widget.plan.courses
@@ -492,14 +486,14 @@ class _CourseMapScreenState extends State<CourseMapScreen> {
                   );
                   final height = math.max(
                     constraints.maxHeight,
-                    130 + groups.map((g) => g.length).reduce(math.max) * step,
+                    90 + groups.map((g) => g.length).reduce(math.max) * step,
                   );
                   final positions = <String, Offset>{};
                   for (var i = 0; i < groups.length; i++) {
                     for (var j = 0; j < groups[i].length; j++) {
                       positions[groups[i][j].id] = Offset(
                         i * laneWidth + 16,
-                        112 + j * step,
+                        70 + j * step,
                       );
                     }
                   }
@@ -552,8 +546,8 @@ class _CourseMapScreenState extends State<CourseMapScreen> {
                                 onAcceptWithDetails: (details) =>
                                     widget.plan.move(details.data, i + 1),
                                 builder: (context, incoming, rejected) => Container(
-                                  height: 88,
-                                  padding: const EdgeInsets.all(12),
+                                  height: 52,
+                                  padding: const EdgeInsets.all(6),
                                   decoration: BoxDecoration(
                                     color: incoming.isNotEmpty
                                         ? const Color(0xFFDDD5FF)
@@ -567,24 +561,16 @@ class _CourseMapScreenState extends State<CourseMapScreen> {
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: const TextStyle(
+                                          fontSize: 11,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                       Text(
-                                        '${groups[i].fold<int>(0, (sum, c) => sum + c.credits)} credits · ${groups[i].length} courses',
+                                        '${groups[i].fold<int>(0, (sum, c) => sum + c.credits)} credits',
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(fontSize: 12),
+                                        style: const TextStyle(fontSize: 10),
                                       ),
-                                      if (widget.timeline?.currentSemester ==
-                                          i + 1)
-                                        const Text(
-                                          'Current semester',
-                                          maxLines: 1,
-                                          style: TextStyle(
-                                            color: AppStyle.purple,
-                                          ),
-                                        ),
                                     ],
                                   ),
                                 ),
@@ -605,7 +591,7 @@ class _CourseMapScreenState extends State<CourseMapScreen> {
                                     width: 210,
                                     child: Padding(
                                       padding: const EdgeInsets.all(16),
-                                      child: Text(course.id),
+                                      child: Text(widget.plan.label(course)),
                                     ),
                                   ),
                                 ),
@@ -634,7 +620,7 @@ class _CourseMapScreenState extends State<CourseMapScreen> {
         ? const Color(0xFFE3F4E9)
         : Colors.white,
     shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(8),
       side: BorderSide(
         color: selected == c.id
             ? AppStyle.purple
@@ -645,10 +631,10 @@ class _CourseMapScreenState extends State<CourseMapScreen> {
       ),
     ),
     child: InkWell(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(8),
       onTap: () => details(c),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(6),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -659,13 +645,16 @@ class _CourseMapScreenState extends State<CourseMapScreen> {
                     widget.plan.label(c),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
                 if (issues.isNotEmpty)
                   const Icon(
                     Icons.warning_amber_rounded,
-                    size: 17,
+                    size: 12,
                     color: Color(0xFFAD701D),
                   ),
               ],
@@ -676,16 +665,12 @@ class _CourseMapScreenState extends State<CourseMapScreen> {
                 c.title,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 12),
+                style: const TextStyle(fontSize: 10),
               ),
             ),
             Text(
               '${c.credits} credits${c.minimumC ? ' · C' : ''}${c.offered == null ? '' : ' · ${c.offered}'}',
-              style: const TextStyle(fontSize: 12),
-            ),
-            Text(
-              widget.plan.status(c.id).name,
-              style: const TextStyle(fontSize: 11, color: AppStyle.purple),
+              style: const TextStyle(fontSize: 10),
             ),
           ],
         ),
@@ -709,7 +694,7 @@ class _DependencyPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     for (final link in links) {
       final active = selected == link.from || selected == link.to;
-      final from = positions[link.from]! + Offset(214, cardHeight / 2);
+      final from = positions[link.from]! + Offset(118, cardHeight / 2);
       final to = positions[link.to]! + Offset(0, cardHeight / 2);
       final paint = Paint()
         ..color = active

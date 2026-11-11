@@ -1,3 +1,8 @@
+String courseDisplayId(String id) =>
+    RegExp(r'^PDF\d*-?SLOT\d*$', caseSensitive: false).hasMatch(id)
+    ? '(Class TBD)'
+    : id;
+
 class TemplateCourse {
   const TemplateCourse(
     this.id,
