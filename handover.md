@@ -63,6 +63,18 @@ flutter test
 flutter build apk --debug
 ```
 
+## Semester class-count fix
+
+Commit `b63126a1ad80fb0a1d92779e9c3b2f8021ee74fd` refreshes the semester's class count when returning to the list after adding or removing a class. The refresh checks that the widget is still mounted and preserves the existing save behavior.
+
+Manual verification steps (not run):
+
+1. Open an existing semester schedule and note its class count.
+2. Add a class, return to the semester list, and confirm that its class count increases immediately.
+3. Reopen the semester, remove a class and confirm removal, then return to the list and confirm that its class count decreases immediately.
+
+ECC confirmed the fix by source inspection and `git diff --check` passed. Flutter tests and emulator checks were not run.
+
 ## Remaining work
 
 1. Confirm LSU-approved Workday/API/export access and supported degree requirement sources.

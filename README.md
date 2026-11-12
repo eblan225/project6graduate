@@ -26,6 +26,8 @@ Students can create semesters, add/edit/remove class entries, and remove semeste
 
 Local formatting, `flutter analyze`, all Flutter tests, and the Android debug APK build passed. GitHub Actions is configured in `.github/workflows/flutter-ci.yml`; its first hosted run is pending.
 
+Commit `b63126a1ad80fb0a1d92779e9c3b2f8021ee74fd` refreshes the semester's class count when returning to the list after adding or removing a class. ECC confirmed this fix by source inspection and `git diff --check` passed; Flutter tests and emulator checks were not run for this fix.
+
 ## Mockup-based starting screens
 
 The current entry flow is Graduate!: sign-in/guest choice → degree timeline preferences → semester schedules → manual semester entry → editable class list / calendar preview. The degree credit planner is available from the schedules page. Older academic scaffolding remains in the source for future integration. Google sign-in is an identity scaffold and does not enable cloud sync. File upload and timed calendar placement are placeholders; goals remain in the session while schedules and credit-plan inputs persist locally.
