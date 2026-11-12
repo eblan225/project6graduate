@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:project6graduate/main.dart';
 import 'package:project6graduate/planner/course_plan.dart';
@@ -227,6 +227,11 @@ void main() {
 
 class MemoryScheduleRepository implements ScheduleRepository {
   List<SemesterSchedule> saved = [];
+
+  @override
+  Future<void> clear() async {
+    saved = [];
+  }
 
   @override
   Future<List<SemesterSchedule>> load() async => saved
