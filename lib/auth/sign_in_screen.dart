@@ -1,4 +1,4 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart';
 
 import '../ui/app_theme.dart';
 import 'google_auth.dart';
@@ -139,19 +139,7 @@ class _AuthGateState extends State<AuthGate> {
             ),
           ),
           if (auth.error != null) Text(auth.error!),
-          Expanded(
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                AbsorbPointer(absorbing: auth.busy, child: widget.child),
-                if (auth.busy)
-                  const ColoredBox(
-                    color: Color(0x66000000),
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-              ],
-            ),
-          ),
+          Expanded(child: widget.child),
         ],
       );
     },

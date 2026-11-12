@@ -1,4 +1,4 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart';
 
 import '../degree_planning/degree_plan_screen.dart';
 import '../importing/import_courses_screen.dart';

@@ -1,4 +1,4 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart';
 
 /// Change these tokens to restyle every schedule screen together.
 abstract final class AppStyle {

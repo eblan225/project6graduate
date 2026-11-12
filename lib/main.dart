@@ -1,4 +1,4 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart';
 
 import 'planner/course_plan.dart';
 import 'planner/course_map_screen.dart';

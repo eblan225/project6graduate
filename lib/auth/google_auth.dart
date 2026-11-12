@@ -3,29 +3,13 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-import '../degree_planning/degree_plan_repository.dart';
-import '../schedules/schedule_repository.dart';
-import 'user_planning_data_cleanup.dart';
-
 /// Identity only. This does not upload schedules or create a backend session.
 class GoogleAuth extends ChangeNotifier {
-  GoogleAuth({
-    UserPlanningDataCleanup? planningDataCleanup,
-    this.signOutIdentity,
-  }) : _planningDataCleanup =
-           planningDataCleanup ??
-           UserPlanningDataCleanup(
-             schedules: PreferencesScheduleRepository(),
-             degreePlans: PreferencesDegreePlanRepository(),
-           );
-
   static const clientId = String.fromEnvironment('GOOGLE_CLIENT_ID');
   static const serverClientId = String.fromEnvironment(
     'GOOGLE_SERVER_CLIENT_ID',
   );
   final _google = GoogleSignIn.instance;
-  final UserPlanningDataCleanup _planningDataCleanup;
-  final Future<void> Function()? signOutIdentity;
   static Future<void>? _initialization;
   StreamSubscription<GoogleSignInAuthenticationEvent>? _subscription;
   GoogleSignInAccount? user;
@@ -104,19 +88,11 @@ class GoogleAuth extends ChangeNotifier {
     error = null;
     notifyListeners();
     try {
-      await _planningDataCleanup.clear();
-    } catch (_) {
-      error = 'Could not clear local planning data. You are still signed in; please try again.';
-      busy = false;
-      notifyListeners();
-      return false;
-    }
-    try {
-      await (signOutIdentity ?? _google.signOut)();
+      await _google.signOut();
       user = null;
       return true;
     } catch (e) {
-      error = 'Could not sign out. Your local planning data was cleared.';
+      error = 'Could not sign out. Please try again.';
       return false;
     } finally {
       busy = false;
