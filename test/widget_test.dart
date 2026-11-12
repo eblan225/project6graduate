@@ -8,8 +8,15 @@ import 'package:project6graduate/models/degree_timeline.dart';
 import 'package:project6graduate/schedules/schedule.dart';
 import 'package:project6graduate/schedules/schedule_repository.dart';
 import 'package:project6graduate/schedules/schedules_screen.dart';
+import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 
 void main() {
+  setUp(() {
+    SharedPreferencesAsyncPlatform.instance =
+        InMemorySharedPreferencesAsync.empty();
+  });
+
   testWidgets('degree upload comes before empty semester schedules', (
     tester,
   ) async {
