@@ -229,6 +229,11 @@ class MemoryScheduleRepository implements ScheduleRepository {
   List<SemesterSchedule> saved = [];
 
   @override
+  Future<void> clear() async {
+    saved = [];
+  }
+
+  @override
   Future<List<SemesterSchedule>> load() async => saved
       .map((schedule) => SemesterSchedule.fromJson(schedule.toJson()))
       .toList();

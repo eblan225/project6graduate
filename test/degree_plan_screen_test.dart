@@ -49,6 +49,11 @@ class MemoryDegreePlanRepository implements DegreePlanRepository {
   DegreePlanInput? saved;
 
   @override
+  Future<void> clear() async {
+    saved = null;
+  }
+
+  @override
   Future<DegreePlanInput?> load() async => saved;
 
   @override

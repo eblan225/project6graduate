@@ -7,6 +7,7 @@ import 'degree_plan.dart';
 abstract interface class DegreePlanRepository {
   Future<DegreePlanInput?> load();
   Future<void> save(DegreePlanInput input);
+  Future<void> clear();
 }
 
 class PreferencesDegreePlanRepository implements DegreePlanRepository {
@@ -27,4 +28,7 @@ class PreferencesDegreePlanRepository implements DegreePlanRepository {
   @override
   Future<void> save(DegreePlanInput input) =>
       _preferences.setString(_storageKey, jsonEncode(input.toJson()));
+
+  @override
+  Future<void> clear() => _preferences.remove(_storageKey);
 }
