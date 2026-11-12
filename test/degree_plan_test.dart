@@ -110,8 +110,13 @@ void main() {
           currentTerm: AcademicTerm(2026, AcademicSeason.fall),
           targetTerm: AcademicTerm(2027, AcademicSeason.spring),
           includeSummer: false,
-          completedCourseCodes: ['math 1550', 'ENGL 1001'],
-          requiredCourseCodes: ['MATH 1550', 'ENGL 1001', 'BIOL 1201'],
+          completedCourseCodes: [' math\t1550 ', 'ENGL 1001'],
+          requiredCourseCodes: [
+            'MATH 1550',
+            'ENGL 1001',
+            'BIOL   1201',
+            'BIOL1201',
+          ],
         ),
       );
 

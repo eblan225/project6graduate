@@ -153,6 +153,8 @@ class DegreePlanEstimate {
 class DegreePlanner {
   const DegreePlanner._();
 
+  static final _courseCodePattern = RegExp(r'^([A-Z]+) ?([0-9]+[A-Z]*)$');
+
   static DegreePlanEstimate? calculate(DegreePlanInput input) {
     if (input.totalCreditsRequired <= 0 ||
         input.completedCredits < 0 ||
@@ -210,6 +212,13 @@ class DegreePlanner {
       ..sort();
   }
 
-  static String _normalizeCourseCode(String code) =>
-      code.trim().toUpperCase().replaceAll(RegExp(r'\\s+'), ' ');
+  static String _normalizeCourseCode(String code) {
+    final normalized = code.trim().toUpperCase().replaceAll(
+      RegExp(r'\s+'),
+      ' ',
+    );
+    final match = _courseCodePattern.firstMatch(normalized);
+    if (match == null) return normalized;
+    return '${match[1]} ${match[2]}';
+  }
 }

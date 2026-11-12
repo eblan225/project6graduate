@@ -41,6 +41,52 @@ void main() {
       const AcademicTerm(2028, AcademicSeason.spring),
     );
   });
+
+  testWidgets('matches course codes entered with or without a space', (
+    tester,
+  ) async {
+    final repository = MemoryDegreePlanRepository(
+      const DegreePlanInput(
+        totalCreditsRequired: 120,
+        completedCredits: 60,
+        currentTermCredits: 15,
+        currentTerm: AcademicTerm(2026, AcademicSeason.fall),
+        targetTerm: AcademicTerm(2027, AcademicSeason.spring),
+        includeSummer: false,
+      ),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(home: DegreePlanScreen(repository: repository)),
+    );
+    await tester.pumpAndSettle();
+
+    final fields = find.byType(TextFormField);
+    await tester.ensureVisible(fields.at(3));
+    await tester.enterText(fields.at(3), 'CSC1350');
+    await tester.ensureVisible(fields.at(4));
+    await tester.enterText(fields.at(4), 'CSC 1350\nCSC 2259');
+
+    final calculate = find.text('Calculate and save');
+    await tester.dragUntilVisible(
+      calculate,
+      find.byType(ListView),
+      const Offset(0, -400),
+    );
+    await tester.tap(calculate);
+    await tester.pumpAndSettle();
+
+    final outstandingCourses = find.byWidgetPredicate(
+      (widget) =>
+          widget is Text && (widget.data?.contains('CSC 2259') ?? false),
+    );
+    await tester.dragUntilVisible(
+      outstandingCourses,
+      find.byType(ListView),
+      const Offset(0, -400),
+    );
+    expect(tester.widget<Text>(outstandingCourses).data, 'CSC 2259');
+  });
 }
 
 class MemoryDegreePlanRepository implements DegreePlanRepository {
