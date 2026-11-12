@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:project6graduate/degree_planning/degree_plan.dart';
 import 'package:project6graduate/degree_planning/degree_plan_repository.dart';
@@ -47,6 +47,11 @@ class MemoryDegreePlanRepository implements DegreePlanRepository {
   MemoryDegreePlanRepository(this.saved);
 
   DegreePlanInput? saved;
+
+  @override
+  Future<void> clear() async {
+    saved = null;
+  }
 
   @override
   Future<DegreePlanInput?> load() async => saved;

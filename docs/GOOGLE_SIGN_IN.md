@@ -2,7 +2,7 @@
 
 The app uses Flutter's `google_sign_in` package for Google identity only. It requests no Drive, Calendar, Gmail, or Workday access. No client secret belongs in this app. Google sign-in does not save schedules to the cloud or authenticate a backend; a future backend must verify ID tokens before trusting identity.
 
-Until OAuth client IDs are supplied, the sign-in screen shows that setup is pending and offers a guest preview. Native builds use Google's account picker; web uses Google's rendered button. Sign-out removes the session-only goals and schedules. Sign-in is explicit on each launch; automatic account restoration is not implemented.
+Until OAuth client IDs are supplied, the sign-in screen shows that setup is pending and offers a guest preview. Native builds use Google's account picker; web uses Google's rendered button. Schedules and degree-plan inputs are stored locally on this device and are not account-synced. A successful Google sign-out removes only those two planning records before signing out; unrelated application preferences are preserved. If either planning record cannot be removed, sign-out is canceled and the user remains signed in so cleanup can be retried. Sign-in is explicit on each launch; automatic account restoration is not implemented.
 
 ## Google project
 
@@ -63,7 +63,7 @@ Use the same `--dart-define` arguments when building for release. Windows and Li
 
 - Sign in with an allowed test account; confirm the account name/email and the goals screen.
 - Cancel the Google dialog; confirm the app remains signed out and can retry.
-- Create goals and schedules, sign out, and sign in with another account; confirm the previous session data is gone.
+- Save schedules and degree-plan inputs, sign out, and sign in with another account; confirm both planning records are gone and unrelated preferences remain.
 - Check the web origin, Android signing fingerprint, or iOS callback scheme if sign-in fails.
 
 Real Google authentication cannot be verified until the project/client IDs and platform registration exist.
