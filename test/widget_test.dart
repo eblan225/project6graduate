@@ -112,7 +112,7 @@ void main() {
       expect(classes(), importedTitle);
       await tester.enterText(
         field,
-        '$importedTitle\nMY 1234 @ Room 204\n'
+        '$importedTitle\n$importedTitle @ Tue 10 AM\nMY 1234 @ Room 204\n'
         'MY 2345 @ Lab 3 @ Tue 14:30\nMY 3456 @ Fri 9AM @ Room 102',
       );
       await tester.ensureVisible(find.text('Create schedule'));
@@ -120,12 +120,14 @@ void main() {
       await tester.pumpAndSettle();
       expect(createdSchedule!.classes.map((course) => course.name), [
         importedTitle,
+        importedTitle,
         'MY 1234 @ Room 204',
         'MY 2345 @ Lab 3',
         'MY 3456',
       ]);
       expect(createdSchedule!.classes.map((course) => course.time), [
         '',
+        'Tue 10 AM',
         '',
         'Tue 14:30',
         'Fri 9AM @ Room 102',

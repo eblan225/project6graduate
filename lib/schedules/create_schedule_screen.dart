@@ -47,11 +47,21 @@ class _CreateScheduleScreenState extends State<CreateScheduleScreen> {
     final title = line.trim();
     if (mapCourseNames.contains(title)) return ScheduleClass(name: title);
 
-    final parts = title.split('@');
+    // A known course title can itself contain @ followed by a clock time.
+    var courseNameLength = 0;
+    for (final name in mapCourseNames) {
+      if (name.length > courseNameLength &&
+          title.startsWith(name) &&
+          title.substring(name.length).trimLeft().startsWith('@')) {
+        courseNameLength = name.length;
+      }
+    }
+    final courseName = title.substring(0, courseNameLength);
+    final parts = title.substring(courseNameLength).split('@');
     for (var i = 1; i < parts.length; i++) {
       if (meetingTime.hasMatch(parts[i])) {
         return ScheduleClass(
-          name: parts.take(i).join('@').trim(),
+          name: '$courseName${parts.take(i).join('@')}'.trim(),
           time: parts.skip(i).join('@').trim(),
         );
       }
