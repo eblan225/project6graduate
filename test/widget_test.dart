@@ -55,7 +55,7 @@ void main() {
       final plan = CoursePlan();
       plan.importCourses(
         [
-          const TemplateCourse('TEST 1001', 'First term', 3, 1),
+          const TemplateCourse('TEST 1001', 'Design / Analysis @ 9 AM', 3, 1),
           const TemplateCourse('TEST 1002', 'Already completed', 3, 1),
           const TemplateCourse('TEST 2001', 'Second term', 3, 2),
         ],
@@ -63,12 +63,32 @@ void main() {
         merge: false,
       );
       plan.update('TEST 1002', PlanStatus.completed, 'A', null);
+      SemesterSchedule? createdSchedule;
       await tester.pumpWidget(
-        MaterialApp(home: CreateScheduleScreen(coursePlan: plan)),
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => TextButton(
+                onPressed: () async {
+                  createdSchedule = await Navigator.push<SemesterSchedule>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => CreateScheduleScreen(coursePlan: plan),
+                    ),
+                  );
+                },
+                child: const Text('Open form'),
+              ),
+            ),
+          ),
+        ),
       );
+      await tester.tap(find.text('Open form'));
+      await tester.pumpAndSettle();
       final field = find.widgetWithText(TextFormField, 'Your classes');
       String classes() => tester.widget<TextFormField>(field).controller!.text;
-      expect(classes(), 'TEST 1001 — First term');
+      const importedTitle = 'TEST 1001 — Design / Analysis @ 9 AM';
+      expect(classes(), importedTitle);
       expect(find.text('Import XLSX / PDF'), findsNothing);
       await tester.tap(find.byType(DropdownButtonFormField<int>));
       await tester.pumpAndSettle();
@@ -76,20 +96,40 @@ void main() {
       await tester.pumpAndSettle();
       expect(classes(), 'TEST 2001 — Second term');
       await tester.ensureVisible(field);
-      await tester.enterText(field, 'MY 1234 / Tue 10 AM');
+      await tester.enterText(field, 'MY 1234 @ Tue 10 AM');
       await tester.ensureVisible(find.byType(DropdownButtonFormField<int>));
       await tester.tap(find.byType(DropdownButtonFormField<int>));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Semester 1').last);
       await tester.pumpAndSettle();
-      expect(classes(), 'MY 1234 / Tue 10 AM');
+      expect(classes(), 'MY 1234 @ Tue 10 AM');
       await tester.ensureVisible(find.text('Use this semester’s map courses'));
       await tester.tap(find.text('Use this semester’s map courses'));
       await tester.pumpAndSettle();
       expect(find.text('Replace your class list?'), findsOneWidget);
       await tester.tap(find.text('Use map courses'));
       await tester.pumpAndSettle();
-      expect(classes(), 'TEST 1001 — First term');
+      expect(classes(), importedTitle);
+      await tester.enterText(
+        field,
+        '$importedTitle\nMY 1234 @ Room 204\n'
+        'MY 2345 @ Lab 3 @ Tue 14:30\nMY 3456 @ Fri 9AM @ Room 102',
+      );
+      await tester.ensureVisible(find.text('Create schedule'));
+      await tester.tap(find.text('Create schedule'));
+      await tester.pumpAndSettle();
+      expect(createdSchedule!.classes.map((course) => course.name), [
+        importedTitle,
+        'MY 1234 @ Room 204',
+        'MY 2345 @ Lab 3',
+        'MY 3456',
+      ]);
+      expect(createdSchedule!.classes.map((course) => course.time), [
+        '',
+        '',
+        'Tue 14:30',
+        'Fri 9AM @ Room 102',
+      ]);
       await tester.pumpWidget(const SizedBox.shrink());
       plan.dispose();
     },
@@ -183,7 +223,7 @@ void main() {
     );
     await tester.enterText(
       find.widgetWithText(TextFormField, 'Your classes'),
-      'ENGL 1001 / Mon 9 AM\nMATH 1021',
+      'ENGL 1001 @ Mon 9 AM\nMATH 1021',
     );
     await tester.scrollUntilVisible(
       find.text('Create schedule'),

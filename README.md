@@ -37,7 +37,7 @@ To change the layout later:
 - `lib/schedules/schedule.dart`: serialized semester and class records, separate from degree planning models.
 - `lib/main.dart`: app entry and navigation into the schedule flow.
 
-Manual entry accepts one class per line, with an optional `|` followed by meeting-time notes. Tap a class to edit it, or use Add class. Calendar mode currently displays a clearly marked preview and the entered notes; it does not interpret times or place classes on a weekly grid.
+Manual entry accepts one class per line. Add an optional meeting note with a time, such as `ENGL 1001 @ Mon 9 AM`. A location by itself, such as `@ Room 204`, stays with the class name. Tap a class to edit it, or use Add class. Calendar mode displays the entered notes as a preview without placing classes on a weekly grid.
 
 The starting screen collects a major and a 2-, 4-, or 5-year degree program length. A final-semester summary below the selection assumes two semesters per academic year; calendar dates depend on the student’s start date. The My goals and Semesters tabs separate these preferences from semester schedule editing and preserve both while switching tabs during a session. These preferences do not yet drive graduation calculations and reset when the app restarts.
 

@@ -14,23 +14,49 @@ class CreateScheduleScreen extends StatefulWidget {
 }
 
 class _CreateScheduleScreenState extends State<CreateScheduleScreen> {
+  static final meetingTime = RegExp(
+    r'\b(?:(?:[01]?\d|2[0-3]):[0-5]\d|(?:0?[1-9]|1[0-2])\s*(?:am|pm))\b',
+    caseSensitive: false,
+  );
+
   final form = GlobalKey<FormState>();
   final name = TextEditingController();
   final classes = TextEditingController();
   late int semester;
-  String filledCourses = '';
+  List<String> mapCourseNames = [];
 
-  String semesterCourses() {
+  String get filledCourses => mapCourseNames.join('\n');
+
+  void fillFromMap() {
     final plan = widget.coursePlan;
-    if (plan == null) return '';
-    return plan.courses
-        .where(
-          (c) =>
-              plan.placements[c.id] == semester &&
-              plan.status(c.id) != PlanStatus.completed,
-        )
-        .map((c) => '${plan.label(c)} — ${c.title}')
-        .join('\n');
+    mapCourseNames = plan == null
+        ? []
+        : plan.courses
+              .where(
+                (c) =>
+                    plan.placements[c.id] == semester &&
+                    plan.status(c.id) != PlanStatus.completed,
+              )
+              .map((c) => '${plan.label(c)} — ${c.title}')
+              .map((name) => name.trim())
+              .toList();
+    classes.text = filledCourses;
+  }
+
+  ScheduleClass parseClass(String line) {
+    final title = line.trim();
+    if (mapCourseNames.contains(title)) return ScheduleClass(name: title);
+
+    final parts = title.split('@');
+    for (var i = 1; i < parts.length; i++) {
+      if (meetingTime.hasMatch(parts[i])) {
+        return ScheduleClass(
+          name: parts.take(i).join('@').trim(),
+          time: parts.skip(i).join('@').trim(),
+        );
+      }
+    }
+    return ScheduleClass(name: title);
   }
 
   void selectSemester(int value) {
@@ -39,8 +65,7 @@ class _CreateScheduleScreenState extends State<CreateScheduleScreen> {
       semester = value;
       name.text = widget.timeline?.semesterLabel(value) ?? 'Semester $value';
       if (canRefresh) {
-        filledCourses = semesterCourses();
-        classes.text = filledCourses;
+        fillFromMap();
       }
     });
     if (!canRefresh) {
@@ -77,10 +102,7 @@ class _CreateScheduleScreenState extends State<CreateScheduleScreen> {
       );
       if (!mounted || replace != true) return;
     }
-    setState(() {
-      filledCourses = semesterCourses();
-      classes.text = filledCourses;
-    });
+    setState(fillFromMap);
   }
 
   @override
@@ -89,8 +111,7 @@ class _CreateScheduleScreenState extends State<CreateScheduleScreen> {
     final plan = widget.timeline;
     semester = plan?.currentSemester ?? 1;
     name.text = plan?.semesterLabel(semester) ?? 'Semester $semester';
-    filledCourses = semesterCourses();
-    classes.text = filledCourses;
+    fillFromMap();
   }
 
   @override
@@ -202,14 +223,15 @@ class _CreateScheduleScreenState extends State<CreateScheduleScreen> {
             decoration: const InputDecoration(
               labelText: 'Your classes',
               alignLabelWithHint: true,
-              hintText: 'One class per line\nENGL 1001 / Mon 9:00 AM\nMATH 1021\n\nTimes are optional.',
+              hintText:
+                  'One class per line\nENGL 1001 @ Mon 9:00 AM\nMATH 1021',
             ),
             validator: (v) =>
                 v == null || v.trim().isEmpty ? 'Add at least one class' : null,
           ),
           const SizedBox(height: 12),
           const Text(
-            'Separate a class name and time with /. This preview keeps times as notes.',
+            'Meeting times are optional. Use @ before a time such as 9 AM or 14:30. A room by itself stays with the class name.',
             style: TextStyle(color: Color(0xFF767085)),
           ),
           const SizedBox(height: 28),
@@ -219,18 +241,14 @@ class _CreateScheduleScreenState extends State<CreateScheduleScreen> {
               final rows = classes.text
                   .split('\n')
                   .where((v) => v.trim().isNotEmpty)
-                  .map((line) {
-                    final parts = line.split('/');
-                    return ScheduleClass(
-                      name: parts.first.trim(),
-                      time: parts.skip(1).join('/').trim(),
-                    );
-                  })
+                  .map(parseClass)
                   .toList();
               if (rows.any((row) => row.name.isEmpty)) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Each line needs a class name before /.'),
+                    content: Text(
+                      'Each line needs a class name before the meeting time.',
+                    ),
                   ),
                 );
                 return;
