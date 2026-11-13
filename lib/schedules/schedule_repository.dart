@@ -7,7 +7,6 @@ import 'schedule.dart';
 abstract interface class ScheduleRepository {
   Future<List<SemesterSchedule>> load();
   Future<void> save(List<SemesterSchedule> schedules);
-  Future<void> clear();
 }
 
 /// Stores lightweight schedule records on this device. Do not store secrets here.
@@ -39,7 +38,4 @@ class PreferencesScheduleRepository implements ScheduleRepository {
     );
     await _preferences.setString(_storageKey, encoded);
   }
-
-  @override
-  Future<void> clear() => _preferences.remove(_storageKey);
 }
