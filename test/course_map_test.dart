@@ -7,6 +7,35 @@ import 'package:project6graduate/schedules/schedule.dart';
 import 'package:project6graduate/ui/app_theme.dart';
 
 void main() {
+  testWidgets('opens the course editor from a planning warning', (
+    tester,
+  ) async {
+    final plan = CoursePlan()
+      ..update('CHEM 1201', PlanStatus.completed, '', null);
+    addTearDown(plan.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppStyle.theme,
+        home: CourseMapScreen(plan: plan, onCreateSchedule: (_) {}),
+      ),
+    );
+    await tester.tap(find.textContaining('Review ('));
+    await tester.pumpAndSettle();
+
+    final warning = find.widgetWithText(ListTile, 'CHEM 1201');
+    await tester.tap(warning);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Planning review'), findsNothing);
+    expect(find.textContaining('CHEM 1201 ·'), findsOneWidget);
+    expect(find.text('Save course'), findsOneWidget);
+
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 300));
+  });
+
   testWidgets(
     'course map moves a course and creates a separate semester schedule',
     (tester) async {

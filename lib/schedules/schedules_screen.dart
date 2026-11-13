@@ -30,15 +30,29 @@ class SchedulesScreen extends StatefulWidget {
 class SchedulesScreenState extends State<SchedulesScreen> {
   late final ScheduleRepository repository;
   final schedules = <SemesterSchedule>[];
+  final _searchController = TextEditingController();
 
   bool loading = true;
   String? loadError;
+
+  Iterable<SemesterSchedule> get _visibleSchedules {
+    final query = _searchController.text.trim().toLowerCase();
+    return schedules.where(
+      (schedule) => schedule.name.toLowerCase().contains(query),
+    );
+  }
 
   @override
   void initState() {
     super.initState();
     repository = widget.repository ?? PreferencesScheduleRepository();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -145,8 +159,7 @@ class SchedulesScreenState extends State<SchedulesScreen> {
     await open(result);
   }
 
-  Future<void> removeSchedule(int index) async {
-    final schedule = schedules[index];
+  Future<void> _removeSchedule(SemesterSchedule schedule) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -165,7 +178,7 @@ class SchedulesScreenState extends State<SchedulesScreen> {
       ),
     );
     if (!mounted || confirmed != true) return;
-    setState(() => schedules.removeAt(index));
+    setState(() => schedules.remove(schedule));
     await _persist();
   }
 
@@ -328,13 +341,38 @@ class SchedulesScreenState extends State<SchedulesScreen> {
                 ],
               ),
               const SizedBox(height: 16),
+              if (schedules.length >= 2 ||
+                  _searchController.text.isNotEmpty) ...[
+                TextField(
+                  controller: _searchController,
+                  onChanged: (_) => setState(() {}),
+                  decoration: InputDecoration(
+                    labelText: 'Search semesters',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: _searchController.text.isEmpty
+                        ? null
+                        : IconButton(
+                            tooltip: 'Clear semester search',
+                            icon: const Icon(Icons.clear),
+                            onPressed: () => setState(_searchController.clear),
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
               if (schedules.isEmpty)
                 const EmptyPanel(
                   icon: Icons.event_note_outlined,
                   title: 'A fresh start',
                   message: 'No semester schedules yet. Start with your degree path above, then create one semester using its map courses or your own class list.',
+                )
+              else if (_visibleSchedules.isEmpty)
+                const EmptyPanel(
+                  icon: Icons.search_off,
+                  title: 'No matching semesters',
+                  message: 'Try a different name or clear your search.',
                 ),
-              for (final schedule in schedules)
+              for (final schedule in _visibleSchedules)
                 Card(
                   child: ListTile(
                     contentPadding: const EdgeInsets.all(20),
@@ -348,7 +386,7 @@ class SchedulesScreenState extends State<SchedulesScreen> {
                       tooltip: 'Schedule actions',
                       onSelected: (action) {
                         if (action == 'delete') {
-                          removeSchedule(schedules.indexOf(schedule));
+                          _removeSchedule(schedule);
                         }
                       },
                       itemBuilder: (_) => const [
