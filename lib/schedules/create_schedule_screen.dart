@@ -35,9 +35,14 @@ class _CreateScheduleScreenState extends State<CreateScheduleScreen> {
 
   void selectSemester(int value) {
     final canRefresh = classes.text.isEmpty || classes.text == filledCourses;
+    final previousLabel =
+        widget.timeline?.semesterLabel(semester) ?? 'Semester $semester';
+    final keepName = name.text.trim().isNotEmpty && name.text != previousLabel;
     setState(() {
       semester = value;
-      name.text = widget.timeline?.semesterLabel(value) ?? 'Semester $value';
+      if (!keepName) {
+        name.text = widget.timeline?.semesterLabel(value) ?? 'Semester $value';
+      }
       if (canRefresh) {
         filledCourses = semesterCourses();
         classes.text = filledCourses;
@@ -55,6 +60,15 @@ class _CreateScheduleScreenState extends State<CreateScheduleScreen> {
   }
 
   Future<void> useMapCourses() async {
+    final mapCourses = semesterCourses();
+    if (mapCourses.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No unfinished map courses for this semester.'),
+        ),
+      );
+      return;
+    }
     if (classes.text.isNotEmpty && classes.text != filledCourses) {
       final replace = await showDialog<bool>(
         context: context,
@@ -78,7 +92,7 @@ class _CreateScheduleScreenState extends State<CreateScheduleScreen> {
       if (!mounted || replace != true) return;
     }
     setState(() {
-      filledCourses = semesterCourses();
+      filledCourses = mapCourses;
       classes.text = filledCourses;
     });
   }
