@@ -51,7 +51,7 @@ Degree timelines now collect the first Fall/Spring term and year plus the studen
 
 ## Visual course planning
 
-Course map provides a reusable blank Computer Engineering 2026–27 flowchart template: tap or drag courses between semesters, inspect solid prerequisite and dotted co-requisite arrows, choose elective placeholders, review sequencing/term conflicts, and copy a semester into a schedule. No personal spreadsheet data or grades are preloaded. See [course map notes](docs/COURSE_MAP.md) for source limitations and editable data/layout files.
+Course map provides a reusable blank Computer Engineering 2026–27 flowchart template: tap or drag courses between semesters, inspect solid prerequisite and dotted co-requisite arrows, choose elective placeholders, review sequencing/term conflicts, and copy a semester into a schedule. If the selected semester has no unfinished map courses, loading map courses shows a message and keeps the current class list. No personal spreadsheet data or grades are preloaded. See [course map notes](docs/COURSE_MAP.md) for source limitations and editable data/layout files.
 
 
 File import is now available under **Course map → Import XLSX / PDF** and **New schedule → Import XLSX / PDF**. Imports have a course-review step and add/replace confirmation. Spreadsheet grades and personal progress are excluded. The supported EEC PDF uses a matching predefined flowchart; other text PDFs require credit/placement review and manual dependency arrows. Scanned PDFs are not supported yet.
