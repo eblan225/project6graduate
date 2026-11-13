@@ -96,7 +96,9 @@ class SchedulesScreenState extends State<SchedulesScreen> {
             ScheduleDetailScreen(schedule: schedule, onChanged: _persist),
       ),
     );
-    if (mounted) await _persist();
+    if (!mounted) return;
+    setState(() {});
+    await _persist();
   }
 
   Future<void> uploadDegreePath() async {
