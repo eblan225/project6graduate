@@ -423,42 +423,56 @@ class _CourseMapScreenState extends State<CourseMapScreen> {
                     spacing: 8,
                     children: [
                       TextButton.icon(
-                        onPressed: () => showModalBottomSheet<void>(
-                          context: context,
-                          isScrollControlled: true,
-                          showDragHandle: true,
-                          builder: (context) => SafeArea(
-                            child: SizedBox(
-                              height: MediaQuery.sizeOf(context).height * 0.65,
-                              child: ListView(
-                                padding: const EdgeInsets.all(20),
-                                children: [
-                                  const Text(
-                                    'Planning review',
-                                    style: TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
+                        onPressed: () async {
+                          final course =
+                              await showModalBottomSheet<TemplateCourse>(
+                                context: context,
+                                isScrollControlled: true,
+                                showDragHandle: true,
+                                builder: (context) => SafeArea(
+                                  child: SizedBox(
+                                    height:
+                                        MediaQuery.sizeOf(context).height *
+                                        0.65,
+                                    child: ListView(
+                                      padding: const EdgeInsets.all(20),
+                                      children: [
+                                        const Text(
+                                          'Planning review',
+                                          style: TextStyle(
+                                            fontSize: 24,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const Text(
+                                          'This advising template is not an official degree audit. Elective-specific prerequisites, transfer equivalencies, and live offerings require confirmation.',
+                                        ),
+                                        for (final c
+                                            in widget.plan.courses.where(
+                                              (c) => issues[c.id]!.isNotEmpty,
+                                            ))
+                                          ListTile(
+                                            title: Text(widget.plan.label(c)),
+                                            subtitle: Text(
+                                              issues[c.id]!.join('\n'),
+                                            ),
+                                            trailing: const Icon(
+                                              Icons.chevron_right,
+                                            ),
+                                            onTap: () =>
+                                                Navigator.pop(context, c),
+                                          ),
+                                        if (count == 0)
+                                          const Text(
+                                            'No ordering conflicts detected in the transcribed rules. Confirm your full plan with advising.',
+                                          ),
+                                      ],
                                     ),
                                   ),
-                                  const Text(
-                                    'This advising template is not an official degree audit. Elective-specific prerequisites, transfer equivalencies, and live offerings require confirmation.',
-                                  ),
-                                  for (final c in widget.plan.courses.where(
-                                    (c) => issues[c.id]!.isNotEmpty,
-                                  ))
-                                    ListTile(
-                                      title: Text(widget.plan.label(c)),
-                                      subtitle: Text(issues[c.id]!.join('\n')),
-                                    ),
-                                  if (count == 0)
-                                    const Text(
-                                      'No ordering conflicts detected in the transcribed rules. Confirm your full plan with advising.',
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
+                                ),
+                              );
+                          if (course != null && mounted) await details(course);
+                        },
                         icon: const Icon(Icons.rule),
                         label: Text('Review ($count)'),
                       ),
