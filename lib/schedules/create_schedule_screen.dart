@@ -35,9 +35,14 @@ class _CreateScheduleScreenState extends State<CreateScheduleScreen> {
 
   void selectSemester(int value) {
     final canRefresh = classes.text.isEmpty || classes.text == filledCourses;
+    final previousLabel =
+        widget.timeline?.semesterLabel(semester) ?? 'Semester $semester';
+    final keepName = name.text.trim().isNotEmpty && name.text != previousLabel;
     setState(() {
       semester = value;
-      name.text = widget.timeline?.semesterLabel(value) ?? 'Semester $value';
+      if (!keepName) {
+        name.text = widget.timeline?.semesterLabel(value) ?? 'Semester $value';
+      }
       if (canRefresh) {
         filledCourses = semesterCourses();
         classes.text = filledCourses;
