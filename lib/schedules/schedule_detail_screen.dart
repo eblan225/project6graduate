@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:material_ui/material_ui.dart';
 
 import '../ui/app_theme.dart';
@@ -17,6 +18,26 @@ class ScheduleDetailScreen extends StatefulWidget {
 
 class _ScheduleDetailScreenState extends State<ScheduleDetailScreen> {
   bool calendar = false;
+
+  Future<void> copyClassList() async {
+    final schedule = widget.schedule;
+    final lines = [schedule.name, ''];
+    for (final course in schedule.classes) {
+      final time = course.time.trim();
+      lines.add(time.isEmpty ? '• ${course.name}' : '• ${course.name} — $time');
+    }
+
+    var message = 'Class list copied.';
+    try {
+      await Clipboard.setData(ClipboardData(text: lines.join('\n')));
+    } catch (_) {
+      message = 'Could not copy the class list.';
+    }
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
+  }
+
   Future<void> editClass([int? index]) async {
     final existing = index == null ? null : widget.schedule.classes[index];
     final name = TextEditingController(text: existing?.name);
@@ -110,7 +131,17 @@ class _ScheduleDetailScreenState extends State<ScheduleDetailScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(widget.schedule.name)),
+    appBar: AppBar(
+      title: Text(widget.schedule.name),
+      actions: [
+        if (widget.schedule.classes.isNotEmpty)
+          IconButton(
+            tooltip: 'Copy class list',
+            onPressed: copyClassList,
+            icon: const Icon(Icons.content_copy),
+          ),
+      ],
+    ),
     body: AppPage(
       children: [
         SegmentedButton<bool>(
